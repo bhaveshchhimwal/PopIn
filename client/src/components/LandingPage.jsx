@@ -1,4 +1,4 @@
-// src/components/LandingPage.jsx
+
 import React from "react";
 import { ShoppingBag, CalendarPlus, Ticket, User } from "lucide-react";
 import Logo from "../Logo"
@@ -6,18 +6,17 @@ import Logo from "../Logo"
 const LandingPage = () => {
   return (
     <div className="font-sans min-h-screen flex flex-col">
-      <header className="flex justify-between items-center px-1 py-1 shadow-sm">
-        <Logo />
-        <nav className="flex items-center space-x-4">
-          <a href="/login" className="hover:text-blue-600">
-            <img
-              src="/src/assets/profile.png"
-              alt="Login"
-              className="w-6 h-6"
-            />
-          </a>
-        </nav>
-      </header>
+ <header className="flex justify-between items-center px-3 md:px-4 py-1.5 border-b border-slate-200 shadow-[0_1px_0_0_rgba(0,0,0,0.03)] leading-none">
+  <div className="shrink-0">
+    <Logo />
+  </div>
+  <nav className="flex items-center gap-3">
+    <a className="hover:opacity-80">
+      <img src="/src/assets/profile.png" alt="Login" className="w-4.5 h-4.5 md:w-5 md:h-5" />
+    </a>
+  </nav>
+</header>
+
 
       <main className="flex-grow">
         <section className="text-center py-16 bg-gray-50">
@@ -27,7 +26,7 @@ const LandingPage = () => {
           </p>
           <div className="space-x-4">
             <a
-              href="/buyer/login"
+              href="/auth/login"
               className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 inline-flex items-center"
             >
               <ShoppingBag className="w-5 h-5 mr-2" /> Buy Tickets
