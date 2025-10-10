@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ShoppingBag, CalendarPlus, Ticket, User } from "lucide-react";
 import Logo from "../Logo"
@@ -6,16 +5,16 @@ import Logo from "../Logo"
 const LandingPage = () => {
   return (
     <div className="font-sans min-h-screen flex flex-col">
- <header className="flex justify-between items-center px-3 md:px-4 py-1.5 border-b border-slate-200 shadow-[0_1px_0_0_rgba(0,0,0,0.03)] leading-none">
-  <div className="shrink-0">
-    <Logo />
-  </div>
-  <nav className="flex items-center gap-3">
-    <a className="hover:opacity-80">
-      <img src="/src/assets/profile.png" alt="Login" className="w-4.5 h-4.5 md:w-5 md:h-5" />
-    </a>
-  </nav>
-</header>
+      <header className="flex justify-between items-center px-3 md:px-4 py-1.5 border-b border-slate-200 shadow-[0_1px_0_0_rgba(0,0,0,0.03)] leading-none">
+        <div className="shrink-0">
+          <Logo />
+        </div>
+        <nav className="flex items-center gap-3">
+          <a className="hover:opacity-80">
+            <img src="/src/assets/profile.png" alt="Login" className="w-4.5 h-4.5 md:w-5 md:h-5" />
+          </a>
+        </nav>
+      </header>
 
 
       <main className="flex-grow">

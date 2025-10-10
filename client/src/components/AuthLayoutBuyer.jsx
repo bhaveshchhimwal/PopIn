@@ -1,4 +1,3 @@
-// src/components/AuthLayout.jsx
 import React, { useState } from "react";
 import Logo from "../Logo";
 import { FcGoogle } from "react-icons/fc";
@@ -15,7 +14,7 @@ import { FcGoogle } from "react-icons/fc";
 function LoginForm({ onSuccess, setMode }) {
   return (
     <form
-      className="space-y-5 max-w-xl" /* narrower and tighter spacing */
+      className="space-y-5 max-w-xl"
       onSubmit={(e) => { e.preventDefault(); onSuccess?.(); }}
     >
       <input
@@ -54,7 +53,7 @@ function LoginForm({ onSuccess, setMode }) {
 function RegisterForm({ onSuccess, setMode }) {
   return (
     <form
-      className="space-y-5 max-w-xl" /* narrower and tighter spacing */
+      className="space-y-5 max-w-xl"
       onSubmit={(e) => { e.preventDefault(); onSuccess?.(); }}
     >
       <input
@@ -84,7 +83,6 @@ function RegisterForm({ onSuccess, setMode }) {
         minLength={6}
       />
 
-      {/* --- Google auth UI added below (frontend only) --- */}
       <div className="flex items-center gap-4">
         <div className="h-px bg-slate-200 flex-1" />
         <span className="text-slate-500 text-sm">or</span>
@@ -93,15 +91,14 @@ function RegisterForm({ onSuccess, setMode }) {
 
 
 
-<button
-  type="button"
-  className="w-full border border-slate-300 hover:border-slate-400 bg-white text-slate-800 text-base py-3 inline-flex items-center justify-center gap-2"
->
-  <FcGoogle className="text-xl" />
-  Continue with Google
-</button>
+      <button
+        type="button"
+        className="w-full border border-slate-300 hover:border-slate-400 bg-white text-slate-800 text-base py-3 inline-flex items-center justify-center gap-2"
+      >
+        <FcGoogle className="text-xl" />
+        Continue with Google
+      </button>
 
-      {/* --- End Google auth UI --- */}
 
       <div className="flex items-center justify-between text-slate-700 text-sm md:text-base">
         <span />
@@ -130,7 +127,7 @@ export default function AuthLayout({ defaultMode = "login" }) {
 
   return (
     <div className="font-sans min-h-screen flex flex-col">
-      {/* Header (unchanged) */}
+
       <header className="flex justify-between items-center px-1 md:px-6 py-1 shadow-sm">
         <Logo />
         <nav className="flex items-center space-x-4">
@@ -139,21 +136,19 @@ export default function AuthLayout({ defaultMode = "login" }) {
         </nav>
       </header>
 
-      {/* Main: moved down and narrower */}
+
       <main className="flex-1 flex justify-center">
         <div className="w-full max-w-2xl px-6 mt-14 md:mt-20">
           <h1 className="text-4xl md:text-5xl font-serif text-slate-800 mb-5">
             {heading}
           </h1>
           {mode === "login" ? (
-            <LoginForm onSuccess={() => {}} setMode={setMode} />
+            <LoginForm onSuccess={() => { }} setMode={setMode} />
           ) : (
-            <RegisterForm onSuccess={() => {}} setMode={setMode} />
+            <RegisterForm onSuccess={() => { }} setMode={setMode} />
           )}
         </div>
       </main>
-
-      {/* Footer (unchanged) */}
       <footer className="text-center py-2 bg-gray-50 text-gray-600">
         © {new Date().getFullYear()} PopIn. All rights reserved.
       </footer>

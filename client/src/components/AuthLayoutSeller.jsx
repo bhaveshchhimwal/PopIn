@@ -80,7 +80,7 @@ function SellerRegisterForm({ onSuccess, setMode }) {
         minLength={6}
       />
 
-      
+
 
       <div className="flex items-center justify-between text-slate-700 text-sm md:text-base">
         <span />
@@ -119,21 +119,21 @@ export default function AuthLayoutSeller({ defaultMode = "login" }) {
         </nav>
       </header>
 
-      
+
       <main className="flex-1 flex justify-center">
         <div className="w-full max-w-2xl px-6 mt-14 md:mt-20">
           <h1 className="text-4xl md:text-5xl font-serif text-slate-800 mb-5">
             {heading}
           </h1>
           {mode === "login" ? (
-            <SellerLoginForm onSuccess={() => {}} setMode={setMode} />
+            <SellerLoginForm onSuccess={() => { }} setMode={setMode} />
           ) : (
-            <SellerRegisterForm onSuccess={() => {}} setMode={setMode} />
+            <SellerRegisterForm onSuccess={() => { }} setMode={setMode} />
           )}
         </div>
       </main>
 
-    
+
       <footer className="text-center py-2 bg-gray-50 text-gray-600">
         © {new Date().getFullYear()} PopIn. All rights reserved.
       </footer>
