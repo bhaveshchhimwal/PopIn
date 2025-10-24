@@ -13,9 +13,7 @@ build/
 
 # ======================
 # Environment files
-# ======================
-*.env
-*.env.local
+server/.env
 
 # ======================
 # System files
