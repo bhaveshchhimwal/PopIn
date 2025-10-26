@@ -2,7 +2,7 @@ import { auth, googleProvider } from "/src/utils/firebase.js";
 import { signInWithPopup } from "firebase/auth";
 import axios from "/src/utils/axiosInstance.js";
 
-export const handleGoogleLogin = async (showToast, setUser) => {
+export const handleGoogleLogin = async (showToast) => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const token = await result.user.getIdToken();
@@ -14,7 +14,7 @@ export const handleGoogleLogin = async (showToast, setUser) => {
     );
 
     // Update user state
-    setUser?.(data);
+   // setUser?.(data);
 
     showToast?.("Logged in successfully!", "success");
   } catch (err) {

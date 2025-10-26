@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./components/home/LandingPage";
 import AuthLayoutBuyer from "./components/auth/authbuyer/AuthPage.jsx";
-import AuthLayoutSeller from "./components/auth/AuthLayoutSeller";
+import AuthLayoutSeller from "./components/auth/authseller/AuthPage.jsx";
 import { ToastProvider } from "./context/ToastContext"; // import ToastProvider
 
 export default function App() {

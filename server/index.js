@@ -5,6 +5,8 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import userRoutes from "./routes/user.js";
+import adminRoutes from "./routes/admin.js";
+
 
 const app = express();
 
@@ -25,7 +27,7 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
 // Mount routes
 app.use("/user", userRoutes);
-
+app.use("/admin", adminRoutes);
 // Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

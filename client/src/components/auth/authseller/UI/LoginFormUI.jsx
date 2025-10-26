@@ -1,14 +1,13 @@
 
-import { FcGoogle } from "react-icons/fc";
+import React from "react";
 
-export function LoginFormUI({
+export function SellerLoginFormUI({
   email,
   password,
   onEmailChange,
   onPasswordChange,
   onSubmit,
   onSwitchMode,
-  onGoogleLogin,
 }) {
   return (
     <form className="space-y-5 max-w-xl" onSubmit={onSubmit}>
@@ -30,6 +29,7 @@ export function LoginFormUI({
       />
 
       <div className="flex items-center justify-between text-slate-700 text-sm md:text-base">
+        <span />
         <button
           type="button"
           onClick={onSwitchMode}
@@ -44,15 +44,6 @@ export function LoginFormUI({
         className="w-full bg-slate-900 hover:bg-slate-800 text-white text-base py-3"
       >
         Login
-      </button>
-
-      <button
-        type="button"
-        onClick={onGoogleLogin}
-        className="w-full border border-slate-300 hover:border-slate-400 bg-white text-slate-800 text-base py-3 inline-flex items-center justify-center gap-2"
-      >
-        <FcGoogle className="text-xl" />
-        Continue with Google
       </button>
     </form>
   );

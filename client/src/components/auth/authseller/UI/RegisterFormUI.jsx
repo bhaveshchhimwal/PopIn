@@ -1,22 +1,41 @@
 
-import { FcGoogle } from "react-icons/fc";
-
-export function LoginFormUI({
+export function SellerRegisterFormUI({
+  orgName,
+  fullName,
   email,
   password,
+  confirmPassword,
+  onOrgChange,
+  onFullNameChange,
   onEmailChange,
   onPasswordChange,
+  onConfirmPasswordChange,
   onSubmit,
   onSwitchMode,
-  onGoogleLogin,
 }) {
   return (
     <form className="space-y-5 max-w-xl" onSubmit={onSubmit}>
       <input
+        type="text"
+        value={orgName}
+        onChange={onOrgChange}
+        placeholder="Organization name"
+        className="w-full border border-slate-300 focus:border-slate-700 focus:ring-0 px-4 py-3 text-base placeholder-slate-400"
+        required
+      />
+      <input
+        type="text"
+        value={fullName}
+        onChange={onFullNameChange}
+        placeholder="Full name"
+        className="w-full border border-slate-300 focus:border-slate-700 focus:ring-0 px-4 py-3 text-base placeholder-slate-400"
+        required
+      />
+      <input
         type="email"
         value={email}
         onChange={onEmailChange}
-        placeholder="Email"
+        placeholder="Work email"
         className="w-full border border-slate-300 focus:border-slate-700 focus:ring-0 px-4 py-3 text-base placeholder-slate-400"
         required
       />
@@ -27,15 +46,26 @@ export function LoginFormUI({
         placeholder="Password"
         className="w-full border border-slate-300 focus:border-slate-700 focus:ring-0 px-4 py-3 text-base placeholder-slate-400"
         required
+
+      />
+      <input
+        type="password"
+        value={confirmPassword}
+        onChange={onConfirmPasswordChange}
+        placeholder="Confirm password"
+        className="w-full border border-slate-300 focus:border-slate-700 focus:ring-0 px-4 py-3 text-base placeholder-slate-400"
+        required
+      
       />
 
       <div className="flex items-center justify-between text-slate-700 text-sm md:text-base">
+        <span />
         <button
           type="button"
           onClick={onSwitchMode}
           className="underline underline-offset-2 hover:text-slate-900"
         >
-          Create account
+          Already have an account? Login
         </button>
       </div>
 
@@ -43,16 +73,7 @@ export function LoginFormUI({
         type="submit"
         className="w-full bg-slate-900 hover:bg-slate-800 text-white text-base py-3"
       >
-        Login
-      </button>
-
-      <button
-        type="button"
-        onClick={onGoogleLogin}
-        className="w-full border border-slate-300 hover:border-slate-400 bg-white text-slate-800 text-base py-3 inline-flex items-center justify-center gap-2"
-      >
-        <FcGoogle className="text-xl" />
-        Continue with Google
+        Create account
       </button>
     </form>
   );
