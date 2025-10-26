@@ -1,5 +1,5 @@
 
-node_modules/          # root
+node_modules/      # root
 server/node_modules/     # server folder
 client/node_modules/     # client folder
 
@@ -9,7 +9,7 @@ build/
 
 
 server/.env
-
+server/.DS_Store
 server/utils/serviceAccountKey.json
 .DS_Store
 Thumbs.db
