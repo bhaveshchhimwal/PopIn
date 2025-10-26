@@ -1,16 +1,25 @@
+import admin from "firebase-admin";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCHcIgMP9v84X9N_QiqSBvpdqMGWiGlLnI",
-  authDomain: "popin-510f1.firebaseapp.com",
-  projectId: "popin-510f1",
-  storageBucket: "popin-510f1.firebasestorage.app",
-  messagingSenderId: "527174974247",
-  appId: "1:527174974247:web:e1b46ea5896e6d38d28702",
-  measurementId: "G-FE1QYDDK8J"
-};
+const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
 
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));
+} catch (err) {
+  console.error("Failed to read Firebase service account:", err);
+  process.exit(1);
+}
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
+
+export const getAdmin = () => admin;

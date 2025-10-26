@@ -2,9 +2,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import User from "../models/User.js";
-//import admin from "../utils/firebase.js";
+import { getAdmin } from "../utils/firebase.js";
 import { validatePassword } from "../utils/validatePassword.js";
-
+const admin = getAdmin();
 dotenv.config();
 const jwtSecret = process.env.JWT_SECRET;
 const bcryptSalt = bcrypt.genSaltSync(10);
@@ -12,17 +12,13 @@ const isDev = process.env.NODE_ENV !== "production";
 
 export const signup = async (req, res) => {
   try {
-    const { email, password, confirmPassword, name } = req.body;
+    const { email, password, name } = req.body;
 
     if (!validatePassword(password)) {
       return res.status(400).json({
         message:
           "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character",
       });
-    }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({ message: "Passwords do not match" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -60,11 +56,11 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-   // console.log("Login request body:", req.body);
+    // console.log("Login request body:", req.body);
 
     const { email, password } = req.body;
     const foundUser = await User.findOne({ email });
-   // console.log("Found user:", foundUser);
+    // console.log("Found user:", foundUser);
 
     if (!foundUser)
       return res.status(404).json({ message: "User does not exist" });
@@ -91,6 +87,7 @@ export const login = async (req, res) => {
   }
 };
 
+
 export const googleAuth = async (req, res) => {
   const { token } = req.body;
 
@@ -98,15 +95,13 @@ export const googleAuth = async (req, res) => {
     const decodedToken = await admin.auth().verifyIdToken(token);
     const { uid: googleId, email, name } = decodedToken;
 
-    let existingUser = await User.findOne({ googleId });
+    let existingUser = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (!existingUser) {
-      existingUser = await User.create({
-        name,
-        email,
-        googleId,
-        role: "user",
-      });
+      existingUser = await User.create({ name, email, googleId, role: "user" });
+    } else if (!existingUser.googleId) {
+      existingUser.googleId = googleId;
+      await existingUser.save();
     }
 
     const appToken = jwt.sign(
@@ -115,18 +110,22 @@ export const googleAuth = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res
-      .cookie("token", appToken, {
-        sameSite: isDev ? "lax" : "none",
-        secure: !isDev,
-        httpOnly: true,
-      })
-      .json({ id: existingUser._id, email: existingUser.email, name: existingUser.name });
+    res.cookie("token", appToken, {
+      sameSite: isDev ? "lax" : "none",
+      secure: !isDev,
+      httpOnly: true,
+    }).json({
+      id: existingUser._id,
+      email: existingUser.email,
+      name: existingUser.name,
+    });
   } catch (error) {
     console.error("Google Auth error:", error);
     res.status(500).json({ message: "Something went wrong with Google login" });
   }
 };
+
+
 
 export const logout = (req, res) => {
   res
