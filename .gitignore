@@ -1,4 +1,3 @@
-
 node_modules/      # root
 server/node_modules/     # server folder
 client/node_modules/     # client folder
