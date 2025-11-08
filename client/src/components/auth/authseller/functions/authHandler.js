@@ -15,9 +15,10 @@ export function createAuthHandler({
       if (validate && !validate()) return;
 
       const payload = getPayload ? getPayload() : {};
-      const { data, status } = await axios.post(endpoint, payload, {
-        withCredentials: true,
-      });
+      
+     // console.log('Sending request:', { endpoint, payload }); // Debug log
+      
+      const { data, status } = await axios.post(endpoint, payload);
 
       if (![200, 201].includes(status)) {
         showToast?.(data?.message || "Something went wrong", "error");
@@ -28,8 +29,8 @@ export function createAuthHandler({
       onSuccess?.(data);
     } catch (err) {
       console.error("Auth error:", err);
-      const message =
-        err.response?.data?.message || "Authentication failed. Please try again.";
+     // console.error("Response data:", err.response?.data);
+      const message = err.response?.data?.message || "Authentication failed. Please try again.";
       showToast?.(message, "error");
       onError?.(err);
     }

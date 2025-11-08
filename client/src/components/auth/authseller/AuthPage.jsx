@@ -1,20 +1,26 @@
+
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom"; // ← MOVED useNavigate here
 import { SellerLoginFormUI } from "./UI/LoginFormUI.jsx";
 import { SellerRegisterFormUI } from "./UI/RegisterFormUI.jsx";
 import { createAuthHandler } from "./functions/authHandler.js";
 import { useToast } from "../../../context/ToastContext.jsx";
 import Logo from "../../logo/Logo.jsx";
 import { SellerHero } from "./UI/SellerHero.jsx";
+import profileImg from "../../../assets/profile.png";
+
 export function SellerLoginForm({ onSuccess, setMode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { showToast } = useToast();
+  const navigate = useNavigate(); 
 
   const handleLogin = createAuthHandler({
-    endpoint: "/admin/login",
+    endpoint: "/api/seller/login",
     getPayload: () => ({ workEmail: email, password }),
     onSuccess: (data) => {
       showToast?.("Logged in successfully!", "success");
+      navigate("/events", { replace: true });
       onSuccess?.(data);
     },
     showToast,
@@ -31,6 +37,7 @@ export function SellerLoginForm({ onSuccess, setMode }) {
     />
   );
 }
+
 export function SellerRegisterForm({ onSuccess, setMode }) {
   const [orgName, setOrgName] = useState("");
   const [fullName, setFullName] = useState("");
@@ -38,8 +45,8 @@ export function SellerRegisterForm({ onSuccess, setMode }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { showToast } = useToast();
+  const navigate = useNavigate(); // ← ADDED this line
 
-  // Optional validation
   const validate = () => {
     if (password !== confirmPassword) {
       showToast?.("Passwords do not match!", "error");
@@ -49,7 +56,7 @@ export function SellerRegisterForm({ onSuccess, setMode }) {
   };
 
   const handleRegister = createAuthHandler({
-    endpoint: "/admin/signup",
+    endpoint: "/api/seller/signup",
     getPayload: () => ({
       organizationName: orgName,
       fullName: fullName,
@@ -59,6 +66,7 @@ export function SellerRegisterForm({ onSuccess, setMode }) {
     validate,
     onSuccess: (data) => {
       showToast?.("Account created successfully!", "success");
+      navigate("/events", { replace: true });
       onSuccess?.(data);
     },
     showToast,
@@ -88,29 +96,29 @@ export default function AuthLayoutSeller({ defaultMode = "login" }) {
 
   return (
     <div className="font-sans min-h-screen flex flex-col bg-gray-50">
-
       <header className="flex justify-between items-center px-4 py-2 shadow-sm bg-white sticky top-0 z-10">
         <Logo />
         <nav className="flex items-center space-x-3">
-          <a href="/" className="text-slate-600 hover:text-slate-900 text-sm sm:text-base">Home</a>
-          <img src="/src/assets/profile.png" alt="Login" className="w-6 h-6 sm:w-8 sm:h-8" />
+          <Link to="/" className="text-slate-600 hover:text-slate-900 text-sm sm:text-base">
+            Home
+          </Link>
+          <img src={profileImg} alt="Profile" className="w-6 h-6 sm:w-8 sm:h-8" />
         </nav>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-start px-4 sm:px-6 mt-10 sm:mt-16">
-        <div className="w-full max-w-md space-y-6"> {/* match form width */}
-          <SellerHero /> {/* now same width as form */}
+        <div className="w-full max-w-md space-y-6">
+          <SellerHero />
           <h1 className="text-xl sm:text-2xl md:text-3xl font-serif text-slate-800 text-center sm:text-left">
             {heading}
           </h1>
           {mode === "login" ? (
-            <SellerLoginForm onSuccess={() => { }} setMode={setMode} />
+            <SellerLoginForm onSuccess={() => {}} setMode={setMode} />
           ) : (
-            <SellerRegisterForm onSuccess={() => { }} setMode={setMode} />
+            <SellerRegisterForm onSuccess={() => {}} setMode={setMode} />
           )}
         </div>
       </main>
-
 
       <footer className="text-center py-3 sm:py-4 bg-gray-50 text-gray-600 text-sm sm:text-base mt-auto">
         © {new Date().getFullYear()} PopIn. All rights reserved.
@@ -118,4 +126,3 @@ export default function AuthLayoutSeller({ defaultMode = "login" }) {
     </div>
   );
 }
-

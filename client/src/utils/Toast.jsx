@@ -1,14 +1,14 @@
-// components/Toast.jsx
+
 import React, { useEffect } from "react";
 
 export default function Toast({ message, type = "info", onClose }) {
-  // Auto-close after 3 seconds (optional if you want extra safety)
+  
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  // Background colors based on type
+
   const bgColor =
     type === "error"
       ? "bg-red-500"

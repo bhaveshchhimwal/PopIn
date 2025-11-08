@@ -1,9 +1,11 @@
-// src/utils/axiosInstance.js
-import axios from "axios";
+import axios from 'axios';
 
-const instance = axios.create({
-  baseURL: "http://localhost:8080", // <-- backend URL
-  withCredentials: true, // for cookies
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:8080',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json', // ← Make sure this is set
+  },
 });
 
-export default instance;
+export default axiosInstance;

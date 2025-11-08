@@ -9,15 +9,23 @@ import { RegisterFormUI } from "./UI/RegisterFormUI.jsx";
 import { createAuthHandler } from "./functions/authHandler.js";
 import { useToast } from "../../../context/ToastContext.jsx";
 import { BuyerHero } from "./UI/BuyerHero.jsx";
+import { useNavigate } from "react-router-dom";
+
 function LoginForm({ onSuccess, setMode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { showToast } = useToast(); 
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+
   const handleLogin = createAuthHandler({
-    endpoint: "/user/login",
-    payload: { email, password },
-    onSuccess: () => console.log("Redirect or update state"),
-    showToast, // pass the toast function
+    endpoint: "/api/user/login",
+    getPayload: () => ({ email, password }),
+    onSuccess: (data) => {
+      showToast?.("Logged in successfully!", "success");
+      navigate("/events", { replace: true });
+      onSuccess?.(data);
+    },
+    showToast,
   });
 
   return (
@@ -32,25 +40,33 @@ function LoginForm({ onSuccess, setMode }) {
     />
   );
 }
+
 function RegisterForm({ onSuccess, setMode }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
- const { showToast } = useToast(); 
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+
   const handleRegister = createAuthHandler({
-    endpoint: "/user/signup",
-    getPayload: () => ({ name, email, password ,}), // send only actual password
+    endpoint: "/api/user/signup",
+    getPayload: () => ({ name, email, password }), 
     validate: () => {
       if (password !== confirmPassword) {
-        showToast?.("Passwords do not match", "error"); // frontend toast
-        return false; // prevent submission
+        showToast?.("Passwords do not match", "error");
+        return false;
       }
       return true;
     },
-    onSuccess: () => console.log("Registration success!"),
+    onSuccess: (data) => {
+      showToast?.("Registration successful!", "success");
+      navigate("/events", { replace: true });
+      onSuccess?.(data);
+    },
     showToast,
   });
+
   return (
     <RegisterFormUI
       name={name}
@@ -74,7 +90,6 @@ export default function AuthLayout({ defaultMode = "login" }) {
 
   return (
     <div className="font-sans min-h-screen flex flex-col bg-gray-50">
-      {/* Header */}
       <header className="flex justify-between items-center px-4 py-2 shadow-sm bg-white">
         <Logo />
         <nav className="flex items-center space-x-3">
@@ -85,10 +100,9 @@ export default function AuthLayout({ defaultMode = "login" }) {
         </nav>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 flex justify-center px-4">
         <div className="w-full max-w-md mt-10 md:mt-20 space-y-6">
-          <BuyerHero /> {/* Matches form width */}
+          <BuyerHero />
           <h1 className="text-xl md:text-2xl font-serif text-slate-800 text-center">
             {heading}
           </h1>
@@ -100,12 +114,9 @@ export default function AuthLayout({ defaultMode = "login" }) {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="text-center py-3 text-gray-600 text-sm bg-white">
         © {new Date().getFullYear()} PopIn. All rights reserved.
       </footer>
     </div>
   );
 }
-
-

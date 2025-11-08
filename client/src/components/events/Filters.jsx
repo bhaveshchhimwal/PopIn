@@ -1,28 +1,26 @@
 export default function Filters() {
-  const dateFilters = [
-    "All", "Today", "Tomorrow", "This Week", "Next Week",
-    "This Month", "Next Month", "This Year"
-  ];
   const categories = [
-    "All", "Arts", "Business", "Music and Theater",
-    "Culture", "Sports", "Education"
+    "All",
+    "Arts",
+    "Business",
+    "Music and Theater",
+    "Culture",
+    "Sports",
+    "Education",
+    "Others"
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 mt-8">
-      <div className="flex flex-wrap gap-3 justify-center text-gray-700 font-medium">
-        {dateFilters.map((filter) => (
-          <button key={filter} className="px-4 py-2 rounded-full border hover:bg-green-100">
-            {filter}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap gap-6 justify-center mt-8">
+    <div className="max-w-6xl mx-auto px-4 mt-6 sm:mt-8">
+      {/* Category Filters */}
+      <div className="flex overflow-x-auto sm:flex-wrap gap-3 sm:gap-6 justify-start sm:justify-center pb-2 no-scrollbar">
         {categories.map((cat) => (
-          <span key={cat} className="cursor-pointer text-gray-700 hover:text-green-600 font-semibold">
+          <button
+            key={cat}
+            className="flex-shrink-0 px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-green-100 hover:border-green-400 font-medium transition text-sm sm:text-base"
+          >
             {cat}
-          </span>
+          </button>
         ))}
       </div>
     </div>
