@@ -20,7 +20,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// --- Express app ---
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -64,14 +63,12 @@ const frontendPath = path.join(__dirname, "../client/dist");
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(frontendPath));
 
-  // Fallback for React Router routes (important!)
   app.get("*", (req, res) => {
     res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
 
-// --- Start server ---
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

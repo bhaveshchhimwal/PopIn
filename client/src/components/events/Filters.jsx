@@ -12,7 +12,6 @@ export default function Filters() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 mt-6 sm:mt-8">
-      {/* Category Filters */}
       <div className="flex overflow-x-auto sm:flex-wrap gap-3 sm:gap-6 justify-start sm:justify-center pb-2 no-scrollbar">
         {categories.map((cat) => (
           <button

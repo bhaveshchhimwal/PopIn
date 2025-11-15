@@ -1,4 +1,3 @@
-// context/ToastContext.jsx
 import React, { createContext, useContext, useState } from "react";
 import Toast from "../utils/Toast.jsx";
 
@@ -9,7 +8,7 @@ export const ToastProvider = ({ children }) => {
 
   const showToast = (message, type = "info") => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3000); // auto-hide
+    setTimeout(() => setToast(null), 3000);
   };
 
   return (

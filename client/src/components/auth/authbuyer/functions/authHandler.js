@@ -16,7 +16,7 @@ export function createAuthHandler({
 
       const payload = getPayload ? getPayload() : {};
       
-      console.log('Sending request:', { endpoint, payload }); // Debug log
+     // console.log('Sending request:', { endpoint, payload }); // Debug log
       
       const { data, status } = await axios.post(endpoint, payload);
 

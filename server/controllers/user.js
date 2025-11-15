@@ -142,8 +142,3 @@ export const me = async (req, res) => {
 
   return res.json({ user: req.user });
 };
-export const sellerMe = async (req, res) => {
-  if (!req.seller) return res.status(401).json({ error: 'not authenticated' });
-
-  return res.json({ seller: req.seller });
-};

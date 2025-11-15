@@ -18,7 +18,7 @@ function LoginForm({ onSuccess, setMode }) {
   const navigate = useNavigate();
 
   const handleLogin = createAuthHandler({
-    endpoint: "/api/user/login",
+    endpoint: "/user/login",
     getPayload: () => ({ email, password }),
     onSuccess: (data) => {
       showToast?.("Logged in successfully!", "success");
@@ -36,7 +36,7 @@ function LoginForm({ onSuccess, setMode }) {
       onPasswordChange={(e) => setPassword(e.target.value)}
       onSubmit={handleLogin}
       onSwitchMode={() => setMode("register")}
-      onGoogleLogin={() => handleGoogleLogin(showToast)}
+      onGoogleLogin={() => handleGoogleLogin(showToast,navigate)}
     />
   );
 }
@@ -50,7 +50,7 @@ function RegisterForm({ onSuccess, setMode }) {
   const navigate = useNavigate();
 
   const handleRegister = createAuthHandler({
-    endpoint: "/api/user/signup",
+    endpoint: "/user/signup",
     getPayload: () => ({ name, email, password }), 
     validate: () => {
       if (password !== confirmPassword) {
@@ -78,7 +78,7 @@ function RegisterForm({ onSuccess, setMode }) {
       onPasswordChange={(e) => setPassword(e.target.value)}
       onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
       onSubmit={handleRegister}
-      onGoogleLogin={() => handleGoogleLogin(showToast)}
+      onGoogleLogin={() => handleGoogleLogin(showToast,navigate)}
       onSwitchMode={() => setMode("login")}
     />
   );

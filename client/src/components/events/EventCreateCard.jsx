@@ -1,4 +1,3 @@
-// components/events/EventCreateCard.jsx
 import React, { useState } from "react";
 import axios from "../../utils/axiosInstance.js";
 import { EventCreateCardUI } from "./EventCreateCardUI.jsx";
@@ -57,13 +56,11 @@ export function EventCreateCard({ apiEndpoint = "/createvent", onSuccess }) {
       const fd = new FormData();
       Object.keys(form).forEach((key) => fd.append(key, form[key]));
       if (image) fd.append("image", image);
-
-      // ✅ axios POST call
       const res = await axios.post(apiEndpoint, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setMessage("✅ Event created successfully!");
+      setMessage(" Event created successfully!");
       setForm({
         title: "",
         description: "",
@@ -82,7 +79,7 @@ export function EventCreateCard({ apiEndpoint = "/createvent", onSuccess }) {
       const msg =
         err.response?.data?.message ||
         err.message ||
-        "❌ Failed to create event";
+        " Failed to create event";
       setMessage(msg);
     } finally {
       setLoading(false);

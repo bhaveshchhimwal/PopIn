@@ -9,7 +9,7 @@ export default function RequireAuth({ userType = "buyer" }) {
 
   useEffect(() => {
     let mounted = true;
-    const endpoint = userType === "seller" ? "/api/seller/me" : "/api/user/me";
+    const endpoint = userType === "seller" ? "/seller/me" : "/user/me";
     
     axios
       .get(endpoint, { withCredentials: true })

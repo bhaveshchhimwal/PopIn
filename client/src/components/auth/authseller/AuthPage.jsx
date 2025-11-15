@@ -1,6 +1,6 @@
-
+// AuthLayoutSeller.jsx
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // ← MOVED useNavigate here
+import { Link, useNavigate } from "react-router-dom";
 import { SellerLoginFormUI } from "./UI/LoginFormUI.jsx";
 import { SellerRegisterFormUI } from "./UI/RegisterFormUI.jsx";
 import { createAuthHandler } from "./functions/authHandler.js";
@@ -13,12 +13,12 @@ export function SellerLoginForm({ onSuccess, setMode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { showToast } = useToast();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleLogin = createAuthHandler({
-    endpoint: "/api/seller/login",
+    endpoint: "/seller/login",
     getPayload: () => ({ workEmail: email, password }),
-    onSuccess: (data) => {
+  onSuccess: (data) => {
       showToast?.("Logged in successfully!", "success");
       navigate("/events", { replace: true });
       onSuccess?.(data);
@@ -45,27 +45,25 @@ export function SellerRegisterForm({ onSuccess, setMode }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { showToast } = useToast();
-  const navigate = useNavigate(); // ← ADDED this line
-
-  const validate = () => {
-    if (password !== confirmPassword) {
-      showToast?.("Passwords do not match!", "error");
-      return false;
-    }
-    return true;
-  };
+  const navigate = useNavigate();
 
   const handleRegister = createAuthHandler({
-    endpoint: "/api/seller/signup",
+    endpoint: "/seller/signup",
     getPayload: () => ({
       organizationName: orgName,
       fullName: fullName,
       workEmail: email,
       password,
     }),
-    validate,
+    validate: () => {
+      if (password !== confirmPassword) {
+        showToast?.("Passwords do not match", "error");
+        return false;
+      }
+      return true;
+    },
     onSuccess: (data) => {
-      showToast?.("Account created successfully!", "success");
+      showToast?.("Registration successful!", "success");
       navigate("/events", { replace: true });
       onSuccess?.(data);
     },
@@ -85,6 +83,7 @@ export function SellerRegisterForm({ onSuccess, setMode }) {
       onPasswordChange={(e) => setPassword(e.target.value)}
       onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
       onSubmit={handleRegister}
+      // <-- fixed: switch back to login mode (matches Buyer behavior)
       onSwitchMode={() => setMode("login")}
     />
   );
