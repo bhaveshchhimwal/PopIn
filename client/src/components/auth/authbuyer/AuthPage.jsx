@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Logo from "../../logo/Logo.jsx";
 import { FcGoogle } from "react-icons/fc";
 import axios from "../../../utils/axiosInstance.js";
-import { useEffect } from "react";
 import { handleGoogleLogin } from "./functions/googleLogin.js";
 import { LoginFormUI } from "./UI/LoginFormUI.jsx";
 import { RegisterFormUI } from "./UI/RegisterFormUI.jsx";
@@ -36,7 +35,7 @@ function LoginForm({ onSuccess, setMode }) {
       onPasswordChange={(e) => setPassword(e.target.value)}
       onSubmit={handleLogin}
       onSwitchMode={() => setMode("register")}
-      onGoogleLogin={() => handleGoogleLogin(showToast,navigate)}
+      onGoogleLogin={() => handleGoogleLogin(showToast, navigate)}
     />
   );
 }
@@ -51,7 +50,7 @@ function RegisterForm({ onSuccess, setMode }) {
 
   const handleRegister = createAuthHandler({
     endpoint: "/user/signup",
-    getPayload: () => ({ name, email, password }), 
+    getPayload: () => ({ name, email, password }),
     validate: () => {
       if (password !== confirmPassword) {
         showToast?.("Passwords do not match", "error");
@@ -78,7 +77,7 @@ function RegisterForm({ onSuccess, setMode }) {
       onPasswordChange={(e) => setPassword(e.target.value)}
       onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
       onSubmit={handleRegister}
-      onGoogleLogin={() => handleGoogleLogin(showToast,navigate)}
+      onGoogleLogin={() => handleGoogleLogin(showToast, navigate)}
       onSwitchMode={() => setMode("login")}
     />
   );
@@ -86,7 +85,30 @@ function RegisterForm({ onSuccess, setMode }) {
 
 export default function AuthLayout({ defaultMode = "login" }) {
   const [mode, setMode] = useState(defaultMode);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const navigate = useNavigate();
   const heading = mode === "login" ? "Login —" : "Create account —";
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await axios.get('/user/me', { withCredentials: true });
+        navigate('/events', { replace: true });
+      } catch (error) {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-slate-600">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="font-sans min-h-screen flex flex-col bg-gray-50">

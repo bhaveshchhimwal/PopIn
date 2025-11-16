@@ -4,8 +4,10 @@ import dotenv from "dotenv";
 import User from "../models/User.js";
 import { getAdmin } from "../utils/firebase.js";
 import { validatePassword } from "../utils/validatePassword.js";
+
 const admin = getAdmin();
 dotenv.config();
+
 const jwtSecret = process.env.JWT_SECRET;
 const bcryptSalt = bcrypt.genSaltSync(10);
 const isDev = process.env.NODE_ENV !== "production";
@@ -45,6 +47,8 @@ export const signup = async (req, res) => {
         sameSite: isDev ? "lax" : "none",
         secure: !isDev,
         httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
       })
       .status(201)
       .json({ id: createdUser._id, email: createdUser.email, name: createdUser.name });
@@ -56,11 +60,8 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    // console.log("Login request body:", req.body);
-
     const { email, password } = req.body;
     const foundUser = await User.findOne({ email });
-    // console.log("Found user:", foundUser);
 
     if (!foundUser)
       return res.status(404).json({ message: "User does not exist" });
@@ -79,6 +80,8 @@ export const login = async (req, res) => {
         sameSite: isDev ? "lax" : "none",
         secure: !isDev,
         httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
       })
       .json({ id: foundUser._id, email: foundUser.email, name: foundUser.name });
   } catch (error) {
@@ -86,7 +89,6 @@ export const login = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 export const googleAuth = async (req, res) => {
   const { token } = req.body;
@@ -110,22 +112,24 @@ export const googleAuth = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", appToken, {
-      sameSite: isDev ? "lax" : "none",
-      secure: !isDev,
-      httpOnly: true,
-    }).json({
-      id: existingUser._id,
-      email: existingUser.email,
-      name: existingUser.name,
-    });
+    res
+      .cookie("token", appToken, {
+        sameSite: isDev ? "lax" : "none",
+        secure: !isDev,
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
+      })
+      .json({
+        id: existingUser._id,
+        email: existingUser.email,
+        name: existingUser.name,
+      });
   } catch (error) {
     console.error("Google Auth error:", error);
     res.status(500).json({ message: "Something went wrong with Google login" });
   }
 };
-
-
 
 export const logout = (req, res) => {
   res
@@ -134,11 +138,12 @@ export const logout = (req, res) => {
       secure: !isDev,
       httpOnly: true,
       maxAge: 0,
+      path: '/'
     })
     .json({ message: "Logged out successfully" });
 };
+
 export const me = async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'not authenticated' });
-
   return res.json({ user: req.user });
 };

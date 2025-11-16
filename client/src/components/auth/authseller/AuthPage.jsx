@@ -1,5 +1,5 @@
 // AuthLayoutSeller.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SellerLoginFormUI } from "./UI/LoginFormUI.jsx";
 import { SellerRegisterFormUI } from "./UI/RegisterFormUI.jsx";
@@ -8,6 +8,7 @@ import { useToast } from "../../../context/ToastContext.jsx";
 import Logo from "../../logo/Logo.jsx";
 import { SellerHero } from "./UI/SellerHero.jsx";
 import profileImg from "../../../assets/profile.png";
+import axios from "../../../utils/axiosInstance.js";
 
 export function SellerLoginForm({ onSuccess, setMode }) {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export function SellerLoginForm({ onSuccess, setMode }) {
   const handleLogin = createAuthHandler({
     endpoint: "/seller/login",
     getPayload: () => ({ workEmail: email, password }),
-  onSuccess: (data) => {
+    onSuccess: (data) => {
       showToast?.("Logged in successfully!", "success");
       navigate("/events", { replace: true });
       onSuccess?.(data);
@@ -83,7 +84,6 @@ export function SellerRegisterForm({ onSuccess, setMode }) {
       onPasswordChange={(e) => setPassword(e.target.value)}
       onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
       onSubmit={handleRegister}
-      // <-- fixed: switch back to login mode (matches Buyer behavior)
       onSwitchMode={() => setMode("login")}
     />
   );
@@ -91,7 +91,30 @@ export function SellerRegisterForm({ onSuccess, setMode }) {
 
 export default function AuthLayoutSeller({ defaultMode = "login" }) {
   const [mode, setMode] = useState(defaultMode);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const navigate = useNavigate();
   const heading = mode === "login" ? "Login —" : "Create account —";
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await axios.get('/seller/me', { withCredentials: true });
+        navigate('/events', { replace: true });
+      } catch (error) {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-slate-600">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="font-sans min-h-screen flex flex-col bg-gray-50">

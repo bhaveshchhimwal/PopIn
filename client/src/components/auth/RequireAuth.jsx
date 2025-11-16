@@ -11,16 +11,35 @@ export default function RequireAuth({ userType = "buyer" }) {
     let mounted = true;
     const endpoint = userType === "seller" ? "/seller/me" : "/user/me";
     
+    // Always check auth - the cookie will be sent automatically
     axios
       .get(endpoint, { withCredentials: true })
-      .then(() => mounted && setAuthed(true))
-      .catch(() => mounted && setAuthed(false))
-      .finally(() => mounted && setLoading(false));
+      .then(() => {
+        if (mounted) {
+          setAuthed(true);
+        }
+      })
+      .catch((error) => {
+        if (mounted) {
+          setAuthed(false);
+        }
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
 
-    return () => (mounted = false);
-  }, [userType]);
+    return () => {
+      mounted = false;
+    };
+  }, [userType]); // Only re-check if userType changes
 
-  if (loading) return <div>Checking authentication…</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Checking authentication...</div>
+      </div>
+    );
+  }
   
   if (!authed) {
     const loginPath = userType === "seller" ? "/seller/login" : "/buyer/login";

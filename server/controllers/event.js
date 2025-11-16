@@ -3,10 +3,8 @@ import streamifier from "streamifier";
 import multer from "multer";
 import Event from "../models/Event.js";
 
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-
 
 const uploadBufferToCloudinary = (buffer, options = {}) => {
   return new Promise((resolve, reject) => {
@@ -18,14 +16,12 @@ const uploadBufferToCloudinary = (buffer, options = {}) => {
   });
 };
 
-
 export const createEvent = [
   upload.single("image"), 
   async (req, res) => {
     try {
-     
-      if (!req.user) {
-        req.user = { _id: "672a6dd799bc6d001f1a2e67" };
+      if (!req.user || !req.user._id) {
+        return res.status(401).json({ message: "Not authenticated" });
       }
 
       const eventData = {
@@ -33,7 +29,6 @@ export const createEvent = [
         createdBy: req.user._id,
       };
 
-  
       if (req.file && req.file.buffer) {
         try {
           const result = await uploadBufferToCloudinary(req.file.buffer, {
@@ -59,7 +54,6 @@ export const createEvent = [
   },
 ];
 
-
 export const getAllEvents = async (req, res) => {
   try {
     const { category, location, search } = req.query;
@@ -80,7 +74,6 @@ export const getAllEvents = async (req, res) => {
   }
 };
 
-
 export const getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id).populate("createdBy", "name email");
@@ -92,17 +85,12 @@ export const getEventById = async (req, res) => {
   }
 };
 
-
 export const updateEvent = [
   upload.single("image"),
   async (req, res) => {
     try {
       const event = await Event.findById(req.params.id);
       if (!event) return res.status(404).json({ message: "Event not found" });
-
-      if (!req.user) {
-        req.user = { _id: event.createdBy.toString() };
-      }
 
       if (event.createdBy.toString() !== req.user._id.toString()) {
         return res.status(403).json({ message: "Not authorized" });
@@ -114,7 +102,6 @@ export const updateEvent = [
           resource_type: "image",
         });
 
-       
         if (event.imagePublicId) {
           await cloudinary.uploader.destroy(event.imagePublicId);
         }
@@ -152,9 +139,6 @@ export const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
-
-   
-    if (!req.user) req.user = { _id: event.createdBy.toString() };
 
     if (event.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized" });

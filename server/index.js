@@ -32,13 +32,13 @@ app.use(
 );
 
 
-app.use((req, res, next) => {
+ app.use((req, res, next) => {
   console.log("Request Method:", req.method);
   console.log("Request Path:", req.path);
   console.log("Content-Type:", req.headers["content-type"]);
   console.log("Request Body:", req.body);
   next();
-});
+}); 
 
 (async () => {
   try {

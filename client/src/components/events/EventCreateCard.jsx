@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "../../utils/axiosInstance.js";
 import { EventCreateCardUI } from "./EventCreateCardUI.jsx";
 
-export function EventCreateCard({ apiEndpoint = "/createvent", onSuccess }) {
+export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess }) {
   const [form, setForm] = useState({
     title: "",
     description: "",

@@ -1,7 +1,8 @@
+// controllers/seller.js
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import Seller from "../models/Seller.js"; 
+import Seller from "../models/Seller.js";
 import { validatePassword } from "../utils/validatePassword.js";
 
 dotenv.config();
@@ -13,7 +14,6 @@ export const sellerSignup = async (req, res) => {
   try {
     const { workEmail, password, fullName, organizationName } = req.body;
 
- 
     if (!validatePassword(password)) {
       return res.status(400).json({
         message:
@@ -21,12 +21,10 @@ export const sellerSignup = async (req, res) => {
       });
     }
 
-
     const existingSeller = await Seller.findOne({ workEmail });
     if (existingSeller)
       return res.status(400).json({ message: "Seller already exists" });
 
- 
     const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 
     const createdSeller = await Seller.create({
@@ -37,7 +35,6 @@ export const sellerSignup = async (req, res) => {
       role: "seller",
     });
 
-    
     const token = jwt.sign(
       { email: createdSeller.workEmail, id: createdSeller._id, role: "seller" },
       jwtSecret,
@@ -49,6 +46,8 @@ export const sellerSignup = async (req, res) => {
         sameSite: isDev ? "lax" : "none",
         secure: !isDev,
         httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
       })
       .status(201)
       .json({
@@ -64,20 +63,16 @@ export const sellerSignup = async (req, res) => {
   }
 };
 
-
 export const sellerLogin = async (req, res) => {
   try {
     const { workEmail, password } = req.body;
-
 
     const foundSeller = await Seller.findOne({ workEmail });
     if (!foundSeller)
       return res.status(404).json({ message: "Seller does not exist" });
 
-   
     if (!bcrypt.compareSync(password, foundSeller.password))
       return res.status(401).json({ message: "Invalid credentials" });
-
 
     const token = jwt.sign(
       { email: foundSeller.workEmail, id: foundSeller._id, role: "seller" },
@@ -90,6 +85,8 @@ export const sellerLogin = async (req, res) => {
         sameSite: isDev ? "lax" : "none",
         secure: !isDev,
         httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
       })
       .json({
         id: foundSeller._id,
@@ -104,7 +101,6 @@ export const sellerLogin = async (req, res) => {
   }
 };
 
-
 export const sellerLogout = (req, res) => {
   res
     .cookie("token", "", {
@@ -112,11 +108,14 @@ export const sellerLogout = (req, res) => {
       secure: !isDev,
       httpOnly: true,
       maxAge: 0,
+      path: "/",
     })
     .json({ message: "Logged out successfully" });
 };
-export const sellerMe = async (req, res) => {
-  if (!req.seller) return res.status(401).json({ error: 'not authenticated' });
 
-  return res.json({ seller: req.seller });
+export const sellerMe = async (req, res) => {
+  // support both req.user and req.seller
+  const auth = req.user || req.seller;
+  if (!auth) return res.status(401).json({ error: "not authenticated" });
+  return res.json({ seller: auth });
 };
