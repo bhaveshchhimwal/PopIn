@@ -8,7 +8,6 @@ import ExploreEvents from "./components/events/ExploreEvents.jsx";
 import EventCreatePage from "./pages/EventCreatePage.jsx";
 import RequireAuth from "./components/auth/RequireAuth.jsx";
 import { ToastProvider } from "./context/ToastContext";
-import { EventCreateCard } from "./components/events/EventCreateCard.jsx";
 
 export default function App() {
   return (
@@ -30,7 +29,7 @@ export default function App() {
 
           {/* Seller-only routes */}
           <Route element={<RequireAuth userType="seller" />}>
-            <Route path="/events/create" element={<EventCreateCard />} />
+            <Route path="/events/create" element={<EventCreatePage />} />
             {/* add other seller-only routes here */}
           </Route>
         </Routes>
