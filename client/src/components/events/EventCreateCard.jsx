@@ -35,7 +35,16 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
   const validate = () => {
     const err = {};
     if (!form.title.trim()) err.title = "Title is required";
-    if (!form.date) err.date = "Date is required";
+    if (!form.date) {
+      err.date = "Date is required";
+    } else {
+      const selectedDate = new Date(form.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        err.date = "Event date cannot be in the past";
+      }
+    }
     if (!form.location.trim()) err.location = "Location is required";
     if (form.price === "" || Number(form.price) < 0)
       err.price = "Price must be 0 or greater";

@@ -1,4 +1,3 @@
-// middlewares/auth.js
 import jwt from "jsonwebtoken";
 
 const extractToken = (req) => {
@@ -46,7 +45,7 @@ export const authenticateSeller = (req, res, next) => {
       role: decoded.role,
     };
 
-    // set both so controllers can use req.user or req.seller
+  // controllers can use req.user or req.seller
     req.user = userObj;
     req.seller = userObj;
 

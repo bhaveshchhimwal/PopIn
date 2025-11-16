@@ -1,4 +1,3 @@
-// ExploreEvents.jsx
 import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar.jsx";
 import HeroSearch from "./HeroSearch.jsx";
@@ -14,7 +13,7 @@ export default function ExploreEvents() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await axios.get("/events"); // axios baseURL should be /api
+        const res = await axios.get("/events");
         setEvents(res.data);
       } catch (err) {
         setError("Failed to load events");
