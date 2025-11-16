@@ -2,10 +2,41 @@ import React, { useState } from "react";
 import { CalendarDays, PlusCircle, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../logo/Logo";
+import axios from "../../utils/axiosInstance.js";
+import { useToast } from "../../context/ToastContext.jsx";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate(); 
+  const [profileOpen, setProfileOpen] = useState(false); 
+  const navigate = useNavigate();
+
+  const { showToast } = useToast();  
+
+  const goToProfile = () => {
+    setProfileOpen(false);
+    navigate("/profile");
+  };
+
+  const goToOrders = () => {
+    setProfileOpen(false);
+    navigate("/orders");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("/seller/logout", {}, { withCredentials: true });
+    } catch {}
+
+    try {
+      await axios.post("/logout", {}, { withCredentials: true });
+    } catch {}
+
+    showToast?.("Logged out successfully!", "success");   // ✅ works now
+
+    setProfileOpen(false);
+    navigate("/");
+  };
+
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -26,7 +57,6 @@ export default function Navbar() {
               Explore Events
             </a>
 
-      
             <button
               onClick={() => navigate("/events/create")}
               className="flex items-center gap-1 text-green-600 hover:text-green-700 font-semibold transition"
@@ -36,13 +66,44 @@ export default function Navbar() {
             </button>
           </div>
 
-          <a href="/profile" className="hover:opacity-80 transition">
-            <img
-              src="/src/assets/profile.png"
-              alt="Profile"
-              className="w-6 h-6 rounded-full object-cover"
-            />
-          </a>
+          {/* Profile avatar + dropdown (desktop) */}
+          <div className="relative">
+            <button
+              onClick={() => setProfileOpen((s) => !s)}
+              className="hover:opacity-80 transition rounded-full"
+              aria-haspopup="true"
+              aria-expanded={profileOpen}
+            >
+              <img
+                src="/src/assets/profile.png"
+                alt="Profile"
+                className="w-6 h-6 rounded-full object-cover"
+              />
+            </button>
+
+            {profileOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg py-2 z-50">
+                <button
+                  onClick={goToProfile}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50"
+                >
+                  My Profile
+                </button>
+                <button
+                  onClick={goToOrders}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50"
+                >
+                  Orders
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mobile Menu Button */}
@@ -67,7 +128,6 @@ export default function Navbar() {
               Explore Events
             </a>
 
-    
             <button
               onClick={() => {
                 navigate("/events/create");
@@ -79,18 +139,43 @@ export default function Navbar() {
               Create Event
             </button>
 
-            <a
-              href="/profile"
-              className="flex items-center gap-2 hover:text-gray-800 transition"
-              onClick={() => setMenuOpen(false)}
-            >
-              <img
-                src="/src/assets/profile.png"
-                alt="Profile"
-                className="w-6 h-6 rounded-full object-cover"
-              />
-              Profile
-            </a>
+            {/* Mobile: Profile + options */}
+            <div className="w-full border-t pt-3">
+              <button
+                onClick={() => {
+                  goToProfile();
+                  setMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 hover:text-gray-800 transition px-2 py-2"
+              >
+                <img
+                  src="/src/assets/profile.png"
+                  alt="Profile"
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+                My Profile
+              </button>
+
+              <button
+                onClick={() => {
+                  goToOrders();
+                  setMenuOpen(false);
+                }}
+                className="w-full text-left px-2 py-2 hover:bg-slate-50"
+              >
+                Orders
+              </button>
+
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMenuOpen(false);
+                }}
+                className="w-full text-left px-2 py-2 hover:bg-slate-50"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       )}
