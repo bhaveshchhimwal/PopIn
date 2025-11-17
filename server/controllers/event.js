@@ -16,6 +16,28 @@ const uploadBufferToCloudinary = (buffer, options = {}) => {
   });
 };
 
+/**
+ * Helper: combine date + time into a single JS Date.
+ * - dateInput: something like "2026-09-19" or ISO string
+ * - timeInput: "05:30" or "05:30:00" (optional)
+ * Returns Date object or null if invalid.
+ */
+function parseDateAndTime(dateInput, timeInput) {
+  if (!dateInput) return null;
+  const base = new Date(dateInput);
+  if (Number.isNaN(base.getTime())) return null;
+
+  if (timeInput && typeof timeInput === "string" && timeInput.trim() !== "") {
+    const parts = timeInput.trim().split(":").map((p) => parseInt(p, 10));
+    const hours = Number.isNaN(parts[0]) ? 0 : parts[0];
+    const minutes = Number.isNaN(parts[1]) ? 0 : parts[1];
+    const seconds = Number.isNaN(parts[2]) ? 0 : (parts[2] ?? 0);
+    base.setHours(hours, minutes, seconds, 0);
+  }
+
+  return base;
+}
+
 export const createEvent = [
   upload.single("image"), 
   async (req, res) => {
@@ -24,9 +46,19 @@ export const createEvent = [
         return res.status(401).json({ message: "Not authenticated" });
       }
 
+      // Validate & combine date + time
+      const parsedDate = parseDateAndTime(req.body.date, req.body.time);
+      if (!parsedDate) {
+        return res.status(400).json({ message: "Invalid date or time" });
+      }
+
       const eventData = {
         ...req.body,
         createdBy: req.user._id,
+        // ensure event.date is a Date object with time applied
+        date: parsedDate,
+        // keep time string for display if provided
+        time: req.body.time ?? "",
       };
 
       if (req.file && req.file.buffer) {
@@ -110,12 +142,13 @@ export const updateEvent = [
         event.imagePublicId = result.public_id;
       }
 
+      // Fields to copy (date/time handled separately below)
       const fields = [
         "title",
         "description",
         "category",
-        "date",
-        "time",
+        // "date", // handled below
+        // "time", // handled below
         "location",
         "price",
         "capacity",
@@ -125,6 +158,19 @@ export const updateEvent = [
       fields.forEach((f) => {
         if (req.body[f] !== undefined) event[f] = req.body[f];
       });
+
+      // If either date or time provided, parse & combine and set event.date
+      if (req.body.date !== undefined || req.body.time !== undefined) {
+        const newDateInput = req.body.date !== undefined ? req.body.date : event.date;
+        const newTimeInput = req.body.time !== undefined ? req.body.time : event.time;
+        const parsed = parseDateAndTime(newDateInput, newTimeInput);
+        if (!parsed) {
+          return res.status(400).json({ message: "Invalid date or time" });
+        }
+        event.date = parsed;
+        // keep the time string for display
+        event.time = req.body.time !== undefined ? req.body.time : event.time;
+      }
 
       await event.save();
       res.status(200).json(event);
