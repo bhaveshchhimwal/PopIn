@@ -30,7 +30,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
     "multer": "^2.0.2",
-    "streamifier": "^0.1.1"
+    "qrcode": "^1.5.4",
+    "streamifier": "^0.1.1",
+    "stripe": "^19.3.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

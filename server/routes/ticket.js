@@ -1,10 +1,29 @@
+// server/routes/ticket.js
 import express from "express";
-import { authenticateUser } from "../middlewares/auth.js";
-import { getUserTickets, createTicket } from "../controllers/ticket.js";
+import { authenticateUser, authenticateSeller } from "../middlewares/auth.js";
+import {
+  getTicketsDashboard,
+  getUserTickets,
+  createTicket,
+  getTicketsForSeller,
+  getTicketById,
+} from "../controllers/ticket.js";
 
 const router = express.Router();
 
-router.get("/", authenticateUser, getUserTickets);
+// buyer: combined dashboard (ticketsOwned, ticketsForSellerEvents, sellerEvents)
+router.get("/", authenticateUser, getTicketsDashboard);
+
+// buyer: get your tickets (legacy / alternate)
+router.get("/mine", authenticateUser, getUserTickets);
+
+// buyer: create/book ticket
 router.post("/", authenticateUser, createTicket);
+
+// seller: get tickets sold for seller's events
+router.get("/seller", authenticateSeller, getTicketsForSeller);
+
+// get ticket by id (buyer/seller)
+router.get("/:id", authenticateUser, getTicketById);
 
 export default router;

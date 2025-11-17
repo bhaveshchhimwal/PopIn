@@ -1,3 +1,4 @@
+// index.js
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
@@ -6,13 +7,14 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 import { v2 as cloudinary } from "cloudinary";
+
 import ticketRoutes from "./routes/ticket.js";
 import userRoutes from "./routes/user.js";
 import sellerRoutes from "./routes/seller.js";
 import eventRoutes from "./routes/event.js";
+import paymentsRoutes from "./routes/payments.js";
 
 dotenv.config();
-
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -21,6 +23,17 @@ cloudinary.config({
 });
 
 const app = express();
+
+app.post(
+  "/payments/webhook",
+  express.raw({ type: "application/json" }),
+  (req, res) =>
+    import("./controllers/webhook.js").then((mod) =>
+      mod.stripeWebhookHandler(req, res)
+    )
+);
+
+// Now the usual middleware for other routes:
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -31,25 +44,22 @@ app.use(
   })
 );
 
-
- app.use((req, res, next) => {
-  console.log("Request Method:", req.method);
-  console.log("Request Path:", req.path);
-  console.log("Content-Type:", req.headers["content-type"]);
-  console.log("Request Body:", req.body);
+app.use((req, res, next) => {
+  console.log("Request:", req.method, req.path);
   next();
-}); 
+});
 
 (async () => {
   try {
     await mongoose.connect(process.env.MONGO_URL);
-    console.log(" MongoDB connected");
+    console.log("MongoDB connected");
   } catch (err) {
-    console.error(" MongoDB connection error:", err);
+    console.error("MongoDB connection error:", err);
     process.exit(1);
   }
 })();
 
+app.use("/api/payments", paymentsRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/events", eventRoutes);
@@ -62,7 +72,6 @@ const frontendPath = path.join(__dirname, "../client/dist");
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(frontendPath));
-
   app.get("*", (req, res) => {
     res.sendFile(path.join(frontendPath, "index.html"));
   });

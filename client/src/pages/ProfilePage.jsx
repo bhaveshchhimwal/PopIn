@@ -18,9 +18,10 @@ export default function ProfilePage() {
     const init = async () => {
       setLoading(true);
       try {
+        // <-- withCredentials added so cookies (auth) are sent
         const res = await axios
           .get("/user/me", { withCredentials: true })
-          .catch(() => axios.get("/seller/me").catch(() => null));
+          .catch(() => axios.get("/seller/me", { withCredentials: true }).catch(() => null));
 
         if (!res || !res.data) {
           navigate("/", { replace: true });
@@ -30,11 +31,11 @@ export default function ProfilePage() {
         setUser(auth);
 
         if (auth.role === "seller") {
-          const ev = await axios.get("/events/seller/myevents").catch(() => null);
+          const ev = await axios.get("/events/seller/myevents", { withCredentials: true }).catch(() => null);
           if (ev) setCreatedEvents(ev.data.events ?? []);
         }
 
-        const tRes = await axios.get("/tickets").catch(() => null);
+        const tRes = await axios.get("/tickets", { withCredentials: true }).catch(() => null);
         if (tRes) {
           setTicketsOwned(tRes.data.ticketsOwned ?? []);
           setTicketsForSellerEvents(tRes.data.ticketsForSellerEvents ?? []);
@@ -47,7 +48,7 @@ export default function ProfilePage() {
       }
     };
     init();
-  }, []);
+  }, [navigate]);
 
   if (loading) return <div>Loading...</div>;
 

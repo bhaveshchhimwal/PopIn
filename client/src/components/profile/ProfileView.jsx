@@ -1,5 +1,12 @@
+// src/components/profile/ProfileView.jsx
 import React from "react";
 import Navbar from "../events/Navbar.jsx";
+
+function ShortId({ value }) {
+  if (!value) return null;
+  const s = value.toString();
+  return <span className="font-mono">{s.slice(0, 8)}</span>;
+}
 
 export default function ProfileView({
   user,
@@ -11,12 +18,18 @@ export default function ProfileView({
   navigate,
   error,
 }) {
+  const copy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // optional: small visual feedback can be implemented with toast
+    } catch {}
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-
         <div className="bg-white rounded-lg shadow p-6 mb-6 flex items-center gap-4">
           <img
             src="/src/assets/profile.png"
@@ -32,7 +45,6 @@ export default function ProfileView({
             </p>
           </div>
         </div>
-
 
         {isSeller && createdEvents?.length > 0 && (
           <section className="mb-8">
@@ -75,6 +87,7 @@ export default function ProfileView({
                           <div className="space-y-2">
                             {soldTickets.map((t) => {
                               const buyer = t.userId ?? {};
+                              const ticketNumber = t.ticketNumber ?? t._id;
                               return (
                                 <div key={t._id} className="flex items-center justify-between text-sm">
                                   <div>
@@ -82,7 +95,18 @@ export default function ProfileView({
                                       {buyer.name ?? buyer.email ?? "Buyer"}
                                     </div>
                                     <div className="text-slate-600 text-xs">
-                                      Qty: {t.quantity ?? 1} · ₹{t.price ?? "—"}
+                                      Qty: {t.quantity ?? 1} · ₹{t.totalPrice ?? t.price ?? t.unitPrice ?? "—"}
+                                    </div>
+                                    <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                                      <span><strong>Ticket No:</strong> {ticketNumber ? <span className="font-mono">{ticketNumber}</span> : <ShortId value={t._id} />}</span>
+                                      {ticketNumber && (
+                                        <button
+                                          onClick={() => copy(ticketNumber)}
+                                          className="text-xs px-2 py-1 border rounded"
+                                        >
+                                          Copy
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="text-xs text-slate-500">
@@ -111,8 +135,8 @@ export default function ProfileView({
           ) : (
             <div className="space-y-4">
               {ticketsOwned.map((ticket) => {
-                const event =
-                  ticket.eventId ?? { title: ticket.eventName, _id: ticket.eventId };
+                const event = ticket.eventId ?? { title: ticket.eventName, _id: ticket.eventId };
+                const ticketNumber = ticket.ticketNumber ?? ticket._id;
 
                 return (
                   <div
@@ -134,9 +158,21 @@ export default function ProfileView({
                       </p>
 
                       <div className="mt-2 text-sm text-slate-700">
-                        <div><strong>Quantity:</strong> {ticket.quantity}</div>
-                        <div><strong>Price:</strong> ₹{ticket.price}</div>
+                        <div><strong>Quantity:</strong> {ticket.quantity ?? 1}</div>
+                        <div><strong>Price:</strong> ₹{ticket.totalPrice ?? ticket.price ?? ticket.unitPrice ?? "—"}</div>
                         <div><strong>Status:</strong> {ticket.status}</div>
+                        <div className="mt-2 text-sm">
+                          <strong>Ticket No:</strong>{" "}
+                          <span className="font-mono">{ticketNumber}</span>
+                          {ticketNumber && (
+                            <button
+                              onClick={() => copy(ticketNumber)}
+                              className="ml-3 text-xs px-2 py-1 border rounded"
+                            >
+                              Copy
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -161,6 +197,7 @@ export default function ProfileView({
               {ticketsForSellerEvents.map((t) => {
                 const event = t.eventId ?? {};
                 const buyer = t.userId ?? {};
+                const ticketNumber = t.ticketNumber ?? t._id;
 
                 return (
                   <div key={t._id} className="bg-white rounded-lg shadow p-3 flex justify-between">
@@ -168,6 +205,9 @@ export default function ProfileView({
                       <div className="font-medium">{event.title ?? "Event"}</div>
                       <div className="text-xs text-slate-600">
                         Buyer: {buyer.name ?? buyer.email ?? "—"} · Qty: {t.quantity}
+                      </div>
+                      <div className="text-xs mt-1">
+                        <strong>Ticket No:</strong> <span className="font-mono">{ticketNumber}</span>
                       </div>
                     </div>
 
