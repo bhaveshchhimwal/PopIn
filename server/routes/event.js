@@ -1,4 +1,3 @@
-// routes/event.js
 import express from "express";
 import {
   createEvent,
@@ -6,18 +5,24 @@ import {
   getEventById,
   updateEvent,
   deleteEvent,
+  getSellerEvents,         // <-- make sure this is imported
 } from "../controllers/event.js";
 import { authenticateUser, authenticateSeller } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// Accept both spellings temporarily so frontend and backend mismatch won't 404
+// Seller create event
 router.post("/createevent", authenticateSeller, createEvent);
-router.post("/createvent", authenticateSeller, createEvent); // added duplicate route
+router.post("/createvent", authenticateSeller, createEvent);
 
+// Seller-only events list
+router.get("/seller/myevents", authenticateSeller, getSellerEvents);   // <-- ADD THIS
+
+// Update / delete
 router.put("/:id", authenticateSeller, updateEvent);
 router.delete("/:id", authenticateSeller, deleteEvent);
 
+// Public events
 router.get("/", authenticateUser, getAllEvents);
 router.get("/:id", authenticateUser, getEventById);
 

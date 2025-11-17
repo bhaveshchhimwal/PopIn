@@ -7,19 +7,14 @@ import { useToast } from "../../context/ToastContext.jsx";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false); 
+  const [profileOpen, setProfileOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { showToast } = useToast();  
+  const { showToast } = useToast();
 
   const goToProfile = () => {
     setProfileOpen(false);
     navigate("/profile");
-  };
-
-  const goToOrders = () => {
-    setProfileOpen(false);
-    navigate("/orders");
   };
 
   const handleLogout = async () => {
@@ -31,22 +26,19 @@ export default function Navbar() {
       await axios.post("/logout", {}, { withCredentials: true });
     } catch {}
 
-    showToast?.("Logged out successfully!", "success");   // ✅ works now
+    showToast?.("Logged out successfully!", "success");
 
     setProfileOpen(false);
     navigate("/");
   };
 
-
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-[52px]">
-        {/* Left: Logo */}
         <div className="flex items-center">
           <Logo />
         </div>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center text-gray-700 font-medium text-[14.5px] flex-1 justify-end">
           <div className="flex items-center gap-6 mr-6">
             <a
@@ -66,13 +58,10 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Profile avatar + dropdown (desktop) */}
           <div className="relative">
             <button
               onClick={() => setProfileOpen((s) => !s)}
               className="hover:opacity-80 transition rounded-full"
-              aria-haspopup="true"
-              aria-expanded={profileOpen}
             >
               <img
                 src="/src/assets/profile.png"
@@ -90,12 +79,6 @@ export default function Navbar() {
                   My Profile
                 </button>
                 <button
-                  onClick={goToOrders}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50"
-                >
-                  Orders
-                </button>
-                <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 hover:bg-slate-50"
                 >
@@ -106,7 +89,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu Button */}
         <button
           className="md:hidden p-2 text-gray-700"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -115,7 +97,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Dropdown Menu */}
       {menuOpen && (
         <div className="md:hidden bg-white shadow-md border-t">
           <div className="flex flex-col items-start p-4 gap-3 text-gray-700 font-medium">
@@ -139,7 +120,6 @@ export default function Navbar() {
               Create Event
             </button>
 
-            {/* Mobile: Profile + options */}
             <div className="w-full border-t pt-3">
               <button
                 onClick={() => {
@@ -154,16 +134,6 @@ export default function Navbar() {
                   className="w-6 h-6 rounded-full object-cover"
                 />
                 My Profile
-              </button>
-
-              <button
-                onClick={() => {
-                  goToOrders();
-                  setMenuOpen(false);
-                }}
-                className="w-full text-left px-2 py-2 hover:bg-slate-50"
-              >
-                Orders
               </button>
 
               <button

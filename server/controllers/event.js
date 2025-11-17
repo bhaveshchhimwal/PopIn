@@ -135,6 +135,21 @@ export const updateEvent = [
   },
 ];
 
+export const getSellerEvents = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const sellerId = req.user._id;
+    const events = await Event.find({ createdBy: sellerId }).sort({ date: 1 });
+
+    res.status(200).json({ events });
+  } catch (err) {
+    console.error("getSellerEvents error:", err);
+    res.status(500).json({ message: "Failed to fetch seller events" });
+  }
+};
 export const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);

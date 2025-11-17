@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { MapPin, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 export default function HeroSearch() {
-  const [location, setLocation] = useState("");
   const [query, setQuery] = useState("");
 
   return (
@@ -21,20 +20,9 @@ export default function HeroSearch() {
         </h1>
 
         {/* Search Box */}
-        <div className="bg-white rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center p-3 sm:p-2 shadow-md max-w-3xl mx-auto gap-3">
-          {/* Location Input */}
-          <div className="flex items-center gap-2 px-3 border sm:border-0 sm:border-r rounded-md sm:rounded-none">
-            <MapPin className="text-gray-500 w-5 h-5" />
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Search Location"
-              className="outline-none text-gray-800 w-full sm:w-40 text-sm sm:text-base placeholder-gray-400"
-            />
-          </div>
-
+        <div className="bg-white rounded-lg flex items-center p-3 sm:p-2 shadow-md max-w-3xl mx-auto gap-3">
           {/* Event Search Input */}
-          <div className="flex items-center flex-1 px-3 border sm:border-0">
+          <div className="flex items-center flex-1 px-3">
             <Search className="text-gray-500 w-5 h-5" />
             <input
               type="text"

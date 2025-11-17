@@ -4,10 +4,13 @@ import Logo from "../components/logo/Logo.jsx";
 
 const LandingPage = () => {
   return (
-    <div className="font-sans min-h-screen flex flex-col">
-      {/* Header */}
+     <div className="font-sans min-h-screen flex flex-col">
       <header className="flex justify-between items-center px-3 sm:px-5 py-1.5 border-b border-slate-200 shadow-sm bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="shrink-0 scale-90 sm:scale-100">
+        
+        <div
+          className="shrink-0 scale-90 sm:scale-100 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           <Logo />
         </div>
         <nav className="flex items-center gap-2 sm:gap-3">
