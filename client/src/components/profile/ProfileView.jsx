@@ -1,5 +1,6 @@
 import React from "react";
 import Navbar from "../events/Navbar.jsx";
+import axios from "../../utils/axiosInstance.js";
 
 function ShortId({ value }) {
   if (!value) return null;
@@ -23,6 +24,36 @@ export default function ProfileView({
     } catch {}
   };
 
+
+  const eventIsActive = (ev) => {
+    if (!ev) return false;
+    if (ev.status && ev.status !== "upcoming") return false;
+    if (ev.date) {
+      const evDate = new Date(ev.date);
+      const now = new Date();
+    
+      return evDate.getTime() >= now.getTime();
+    }
+    return false;
+  };
+
+  
+  const handleDelete = async (eventId) => {
+    if (!eventId) return;
+    const ok = window.confirm("Are you sure you want to delete this event? This action cannot be undone.");
+    if (!ok) return;
+
+    try {
+      
+      await axios.delete(`/events/${eventId}`, { withCredentials: true });
+
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to delete event:", err);
+      alert(err.response?.data?.message || "Failed to delete event");
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
@@ -35,7 +66,7 @@ export default function ProfileView({
             className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
           />
           <div>
-            <h2 className="text-base sm:text-lg font-semibold">
+            <h2 className="text-base sm:text-lg font-semibold break-words">
               {user.fullName ?? user.name ?? user.email}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600">
@@ -53,8 +84,21 @@ export default function ProfileView({
                 const soldTickets = ticketsMap[id] ?? [];
 
                 return (
-                  <div key={id} className="bg-white rounded-lg shadow overflow-hidden">
+                  <div
+                    key={id}
+                    className="bg-white rounded-lg shadow overflow-hidden relative"
+                  >
                     <div className="p-3">
+                    
+                      <div className="sm:hidden mb-2 flex justify-end">
+                        <button
+                          onClick={() => handleDelete(id)}
+                          className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
+
                       <div className="flex items-start gap-3">
                         <div className="w-24 flex-shrink-0">
                           <img
@@ -65,13 +109,26 @@ export default function ProfileView({
                         </div>
 
                         <div className="flex-1">
-                          <h4 className="text-sm sm:text-lg font-semibold">{ev.title}</h4>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            {new Date(ev.date).toLocaleString()}
-                          </p>
-                          <p className="mt-1 text-xs sm:text-sm text-slate-700">
-                            {ev.description?.slice?.(0, 120)}
-                          </p>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h4 className="text-sm sm:text-lg font-semibold break-words">
+                                {ev.title}
+                              </h4>
+                              <p className="text-xs sm:text-sm text-slate-600">
+                                {new Date(ev.date).toLocaleString()}
+                              </p>
+                            </div>
+
+                            <div className="hidden sm:block ml-3">
+                              <button
+                                onClick={() => handleDelete(id)}
+                                className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50"
+                                title="Delete"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
 
                           <div className="mt-2 text-sm text-slate-700">
                             <strong>Tickets sold:</strong> {soldTickets.length}
@@ -86,27 +143,38 @@ export default function ProfileView({
                             {soldTickets.map((t) => {
                               const buyer = t.userId ?? {};
                               const ticketNumber = t.ticketNumber ?? t._id;
+
                               return (
                                 <div key={t._id} className="flex items-center justify-between text-sm">
                                   <div className="flex-1">
-                                    <div className="font-medium text-sm">
+                                    <div className="font-medium text-sm break-words">
                                       {buyer.name ?? buyer.email ?? "Buyer"}
                                     </div>
                                     <div className="text-slate-600 text-xs">
                                       Qty: {t.quantity ?? 1} · ₹{t.totalPrice ?? t.price ?? t.unitPrice ?? "—"}
                                     </div>
-                                    <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+
+                                    <div className="text-xs text-slate-500 mt-1 flex items-center gap-2 break-words">
                                       <span>
-                                        <strong>Ticket No:</strong>{' '}
-                                        {ticketNumber ? <span className="font-mono">{ticketNumber}</span> : <ShortId value={t._id} />}
+                                        <strong>Ticket No:</strong>{" "}
+                                        {ticketNumber ? (
+                                          <span className="font-mono break-all">{ticketNumber}</span>
+                                        ) : (
+                                          <ShortId value={t._id} />
+                                        )}
                                       </span>
+
                                       {ticketNumber && (
-                                        <button onClick={() => copy(ticketNumber)} className="text-xs px-2 py-1 border rounded">
+                                        <button
+                                          onClick={() => copy(ticketNumber)}
+                                          className="text-xs px-2 py-1 border rounded"
+                                        >
                                           Copy
                                         </button>
                                       )}
                                     </div>
                                   </div>
+
                                   <div className="text-xs text-slate-500">
                                     {new Date(t.createdAt).toLocaleString()}
                                   </div>
@@ -135,8 +203,13 @@ export default function ProfileView({
                 const event = ticket.eventId ?? { title: ticket.eventName, _id: ticket.eventId };
                 const ticketNumber = ticket.ticketNumber ?? ticket._id;
 
+                const active = eventIsActive(event);
+
                 return (
-                  <div key={ticket._id} className="bg-white rounded-lg shadow p-3 flex flex-col sm:flex-row gap-3 items-start">
+                  <div
+                    key={ticket._id}
+                    className="bg-white rounded-lg shadow p-3 flex flex-col sm:flex-row gap-3 items-start"
+                  >
                     <div className="w-full sm:w-40 flex-shrink-0">
                       <img
                         src={event?.image || "/src/assets/hero-bg.jpg"}
@@ -146,18 +219,43 @@ export default function ProfileView({
                     </div>
 
                     <div className="flex-1">
-                      <h4 className="text-sm sm:text-lg font-semibold">{event?.title}</h4>
-                      <p className="text-xs sm:text-sm text-slate-600">{new Date(ticket.createdAt).toLocaleString()}</p>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm sm:text-lg font-semibold break-words">{event?.title}</h4>
+            
+                        {active ? (
+                          <span className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        {new Date(ticket.createdAt).toLocaleString()}
+                      </p>
 
                       <div className="mt-2 text-sm text-slate-700">
-                        <div><strong>Quantity:</strong> {ticket.quantity ?? 1}</div>
-                        <div><strong>Price:</strong> ₹{ticket.totalPrice ?? ticket.price ?? ticket.unitPrice ?? "—"}</div>
-                        <div><strong>Status:</strong> {ticket.status}</div>
+                        <div>
+                          <strong>Quantity:</strong> {ticket.quantity ?? 1}
+                        </div>
+                        <div>
+                          <strong>Price:</strong> ₹
+                          {ticket.totalPrice ?? ticket.price ?? ticket.unitPrice ?? "—"}
+                        </div>
+
+    
                         <div className="mt-2 text-sm">
-                          <strong>Ticket No:</strong>{' '}
+                          <strong>Ticket No:</strong>{" "}
                           <span className="font-mono break-all">{ticketNumber}</span>
+
                           {ticketNumber && (
-                            <button onClick={() => copy(ticketNumber)} className="ml-2 text-xs px-2 py-1 border rounded">
+                            <button
+                              onClick={() => copy(ticketNumber)}
+                              className="ml-2 mt-1 sm:ml-2 text-xs px-2 py-1 border rounded"
+                            >
                               Copy
                             </button>
                           )}
@@ -165,7 +263,10 @@ export default function ProfileView({
                       </div>
                     </div>
 
-                    <button onClick={() => navigate(`/events/${event._id}`)} className="text-sm bg-slate-800 text-white px-3 py-2 rounded w-full sm:w-auto">
+                    <button
+                      onClick={() => navigate(`/events/${event._id}`)}
+                      className="text-sm bg-slate-800 text-white px-3 py-2 rounded w-full sm:w-auto mt-2 sm:mt-0"
+                    >
                       View event
                     </button>
                   </div>
@@ -185,17 +286,31 @@ export default function ProfileView({
                 const buyer = t.userId ?? {};
                 const ticketNumber = t.ticketNumber ?? t._id;
 
+                const active = eventIsActive(event);
+
                 return (
-                  <div key={t._id} className="bg-white rounded-lg shadow p-3 flex flex-col sm:flex-row justify-between gap-3">
+                  <div
+                    key={t._id}
+                    className="bg-white rounded-lg shadow p-3 flex flex-col sm:flex-row justify-between gap-3"
+                  >
                     <div>
-                      <div className="font-medium text-sm">{event.title ?? "Event"}</div>
+                      <div className="font-medium text-sm break-words">{event.title ?? "Event"}</div>
+        
+                      {active ? (
+                        <div className="text-xs mt-1 bg-emerald-50 inline-block px-2 py-1 rounded-full text-emerald-700 border border-emerald-100">Active</div>
+                      ) : (
+                        <div className="text-xs mt-1 text-red-600">Inactive</div>
+                      )}
                       <div className="text-xs text-slate-600">Buyer: {buyer.name ?? buyer.email ?? "—"} · Qty: {t.quantity}</div>
                       <div className="text-xs mt-1">
-                        <strong>Ticket No:</strong> <span className="font-mono break-all">{ticketNumber}</span>
+                        <strong>Ticket No:</strong>{" "}
+                        <span className="font-mono break-all">{ticketNumber}</span>
                       </div>
                     </div>
 
-                    <div className="text-xs text-slate-500">{new Date(t.createdAt).toLocaleString()}</div>
+                    <div className="text-xs text-slate-500">
+                      {new Date(t.createdAt).toLocaleString()}
+                    </div>
                   </div>
                 );
               })}

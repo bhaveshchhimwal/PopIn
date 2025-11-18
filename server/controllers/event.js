@@ -16,12 +16,7 @@ const uploadBufferToCloudinary = (buffer, options = {}) => {
   });
 };
 
-/**
- * Helper: combine date + time into a single JS Date.
- * - dateInput: something like "2026-09-19" or ISO string
- * - timeInput: "05:30" or "05:30:00" (optional)
- * Returns Date object or null if invalid.
- */
+
 function parseDateAndTime(dateInput, timeInput) {
   if (!dateInput) return null;
   const base = new Date(dateInput);
@@ -39,14 +34,13 @@ function parseDateAndTime(dateInput, timeInput) {
 }
 
 export const createEvent = [
-  upload.single("image"), 
+  upload.single("image"),
   async (req, res) => {
     try {
       if (!req.user || !req.user._id) {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      // Validate & combine date + time
       const parsedDate = parseDateAndTime(req.body.date, req.body.time);
       if (!parsedDate) {
         return res.status(400).json({ message: "Invalid date or time" });
@@ -55,9 +49,9 @@ export const createEvent = [
       const eventData = {
         ...req.body,
         createdBy: req.user._id,
-        // ensure event.date is a Date object with time applied
+       
         date: parsedDate,
-        // keep time string for display if provided
+      
         time: req.body.time ?? "",
       };
 
@@ -88,16 +82,82 @@ export const createEvent = [
 
 export const getAllEvents = async (req, res) => {
   try {
-    const { category, location, search } = req.query;
+    const { category, location, q, search } = req.query;
     const filter = {};
+    const categoryMap = {
+      "music and theater": "music",
+      music: "music",
 
-    if (category && category !== "all") filter.category = category;
-    if (location) filter.location = new RegExp(location, "i");
-    if (search) filter.title = { $regex: search, $options: "i" };
+      tech: "tech",
+      technology: "tech",
 
-    const events = await Event.find(filter)
+      sports: "sports",
+      comedy: "comedy",
+      education: "education",
+
+      business: "business",
+
+      others: "other",
+      other: "other",
+
+      all: null,
+    };
+
+    if (category) {
+      const key = String(category).trim().toLowerCase();
+      const mapped = categoryMap[key];
+      if (mapped) {
+        filter.category = mapped;
+      }
+    }
+
+    if (location) {
+      filter.location = new RegExp(location, "i");
+    }
+
+    const searchTerm = q || search;
+    if (searchTerm && String(searchTerm).trim() !== "") {
+      const regex = new RegExp(String(searchTerm).trim(), "i");
+      filter.$or = [{ title: regex }, { description: regex }];
+    }
+
+  
+    filter.status = "upcoming";
+
+   
+    const rawEvents = await Event.find(filter)
       .populate("createdBy", "name email")
       .sort({ date: 1 });
+
+   
+    function combineDateAndTime(ev) {
+      if (!ev || !ev.date) return null;
+      const base = new Date(ev.date);
+
+      if (ev.time && typeof ev.time === "string" && ev.time.trim() !== "") {
+        const parts = ev.time.trim().split(":").map((p) => parseInt(p, 10));
+        const hours = Number.isNaN(parts[0]) ? 0 : parts[0];
+        const minutes = Number.isNaN(parts[1]) ? 0 : parts[1];
+        const seconds = Number.isNaN(parts[2]) ? 0 : (parts[2] ?? 0);
+        base.setHours(hours, minutes, seconds, 0);
+      } else {
+      
+        base.setHours(23, 59, 59, 999);
+      }
+      return base;
+    }
+
+    const now = new Date();
+
+  
+    const events = rawEvents.filter((ev) => {
+      const combined = combineDateAndTime(ev);
+      if (!combined) return false; 
+      return combined.getTime() >= now.getTime();
+    });
+
+   
+    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     res.status(200).json(events);
   } catch (error) {
@@ -142,13 +202,12 @@ export const updateEvent = [
         event.imagePublicId = result.public_id;
       }
 
-      // Fields to copy (date/time handled separately below)
+    
       const fields = [
         "title",
         "description",
         "category",
-        // "date", // handled below
-        // "time", // handled below
+    
         "location",
         "price",
         "capacity",
@@ -159,7 +218,7 @@ export const updateEvent = [
         if (req.body[f] !== undefined) event[f] = req.body[f];
       });
 
-      // If either date or time provided, parse & combine and set event.date
+     
       if (req.body.date !== undefined || req.body.time !== undefined) {
         const newDateInput = req.body.date !== undefined ? req.body.date : event.date;
         const newTimeInput = req.body.time !== undefined ? req.body.time : event.time;
@@ -168,7 +227,7 @@ export const updateEvent = [
           return res.status(400).json({ message: "Invalid date or time" });
         }
         event.date = parsed;
-        // keep the time string for display
+       
         event.time = req.body.time !== undefined ? req.body.time : event.time;
       }
 
@@ -188,7 +247,8 @@ export const getSellerEvents = async (req, res) => {
     }
 
     const sellerId = req.user._id;
-    const events = await Event.find({ createdBy: sellerId }).sort({ date: 1 });
+  
+    const events = await Event.find({ createdBy: sellerId }).sort({ date: -1 });
 
     res.status(200).json({ events });
   } catch (err) {
@@ -196,6 +256,7 @@ export const getSellerEvents = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch seller events" });
   }
 };
+
 export const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axiosInstance.js";
 import ProfileView from "../components/profile/ProfileView.jsx";
@@ -14,41 +14,49 @@ export default function ProfilePage() {
   const [sellerEvents, setSellerEvents] = useState([]);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      try {
-        // <-- withCredentials added so cookies (auth) are sent
-        const res = await axios
-          .get("/user/me", { withCredentials: true })
-          .catch(() => axios.get("/seller/me", { withCredentials: true }).catch(() => null));
+  const fetchProfileData = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios
+        .get("/user/me", { withCredentials: true })
+        .catch(() => axios.get("/seller/me", { withCredentials: true }).catch(() => null));
 
-        if (!res || !res.data) {
-          navigate("/", { replace: true });
-          return;
-        }
-        const auth = res.data.user ?? res.data.seller ?? res.data;
-        setUser(auth);
-
-        if (auth.role === "seller") {
-          const ev = await axios.get("/events/seller/myevents", { withCredentials: true }).catch(() => null);
-          if (ev) setCreatedEvents(ev.data.events ?? []);
-        }
-
-        const tRes = await axios.get("/tickets", { withCredentials: true }).catch(() => null);
-        if (tRes) {
-          setTicketsOwned(tRes.data.ticketsOwned ?? []);
-          setTicketsForSellerEvents(tRes.data.ticketsForSellerEvents ?? []);
-          setSellerEvents(tRes.data.sellerEvents ?? []);
-        }
-      } catch {
-        setError("Unable to load profile");
-      } finally {
-        setLoading(false);
+      if (!res || !res.data) {
+        navigate("/", { replace: true });
+        return;
       }
-    };
-    init();
+      const auth = res.data.user ?? res.data.seller ?? res.data;
+      setUser(auth);
+
+      if (auth.role === "seller") {
+        const ev = await axios.get("/events/seller/myevents", { withCredentials: true }).catch(() => null);
+        if (ev) setCreatedEvents(ev.data.events ?? []);
+      } else {
+        setCreatedEvents([]);
+      }
+
+      const tRes = await axios.get("/tickets", { withCredentials: true }).catch(() => null);
+      if (tRes) {
+        setTicketsOwned(tRes.data.ticketsOwned ?? []);
+        setTicketsForSellerEvents(tRes.data.ticketsForSellerEvents ?? []);
+        setSellerEvents(tRes.data.sellerEvents ?? []);
+      } else {
+        setTicketsOwned([]);
+        setTicketsForSellerEvents([]);
+        setSellerEvents([]);
+      }
+    } catch (err) {
+      console.error("Profile fetch error", err);
+      setError("Unable to load profile");
+    } finally {
+      setLoading(false);
+    }
   }, [navigate]);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   if (loading) return <div>Loading...</div>;
 
@@ -64,6 +72,21 @@ export default function ProfilePage() {
     ticketsMap[id].push(t);
   });
 
+
+  const handleDeleteEvent = async (eventId) => {
+    const ok = window.confirm("Are you sure you want to delete this event? This cannot be undone.");
+    if (!ok) return;
+
+    try {
+      await axios.delete(`/events/${eventId}`, { withCredentials: true });
+    
+      await fetchProfileData();
+    } catch (err) {
+      console.error("Failed to delete event", err);
+      alert(err.response?.data?.message || "Failed to delete event");
+    }
+  };
+
   return (
     <ProfileView
       user={user}
@@ -74,6 +97,7 @@ export default function ProfilePage() {
       ticketsForSellerEvents={ticketsForSellerEvents}
       ticketsMap={ticketsMap}
       error={error}
+      onDeleteEvent={handleDeleteEvent}
     />
   );
 }

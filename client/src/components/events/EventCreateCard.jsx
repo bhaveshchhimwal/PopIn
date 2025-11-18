@@ -19,6 +19,28 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  const categoryMap = {
+    "music and theater": "music",
+    music: "music",
+    tech: "tech",
+    technology: "tech",
+    sports: "sports",
+    comedy: "comedy",
+    education: "education",
+    business: "business",
+    others: "other",
+    other: "other",
+  };
+
+  const mapCategoryForApi = (uiCategory) => {
+    if (!uiCategory) return "other";
+    const key = String(uiCategory).trim().toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(categoryMap, key)) {
+      return categoryMap[key];
+    }
+    return uiCategory;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -34,24 +56,38 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
 
   const validate = () => {
     const err = {};
+
     if (!form.title.trim()) err.title = "Title is required";
     if (!form.date) {
       err.date = "Date is required";
     } else {
-      const selectedDate = new Date(form.date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
-        err.date = "Event date cannot be in the past";
+      const d = new Date(form.date);
+      let eventDateTime = new Date(form.date);
+
+      if (form.time) {
+        const [hh, mm] = form.time.split(":").map(Number);
+        eventDateTime.setHours(hh, mm, 0, 0);
+      } else {
+        eventDateTime.setHours(0, 0, 0, 0);
+      }
+
+      const now = new Date();
+
+
+      if (eventDateTime < now) {
+        err.date = "Event date and time cannot be in the past";
       }
     }
+
     if (!form.location.trim()) err.location = "Location is required";
     if (form.price === "" || Number(form.price) < 0)
       err.price = "Price must be 0 or greater";
     if (form.capacity === "" || Number(form.capacity) < 1)
       err.capacity = "Capacity must be at least 1";
+
     return err;
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,8 +99,15 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
     setLoading(true);
     try {
       const fd = new FormData();
-      Object.keys(form).forEach((key) => fd.append(key, form[key]));
+      const mappedCategory = mapCategoryForApi(form.category);
+
+      Object.keys(form).forEach((key) => {
+        if (key === "category") fd.append("category", mappedCategory);
+        else fd.append(key, form[key]);
+      });
+
       if (image) fd.append("image", image);
+
       const res = await axios.post(apiEndpoint, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });

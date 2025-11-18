@@ -16,7 +16,7 @@ export default function EventCard({ event }) {
   return (
     <div
       className="bg-white shadow-md rounded-2xl overflow-hidden hover:shadow-lg transition cursor-pointer"
-      onClick={() => navigate(`/events/${_id}`)} // card click
+      onClick={() => navigate(`/events/${_id}`)} 
     >
       <img
         src={image || "/assets/sample-event.jpg"}
@@ -40,7 +40,7 @@ export default function EventCard({ event }) {
 
           <button
             onClick={(e) => {
-              e.stopPropagation(); // prevent card click from triggering
+              e.stopPropagation(); 
               navigate(`/events/${_id}`);
             }}
             className="ml-4 bg-green-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-600"

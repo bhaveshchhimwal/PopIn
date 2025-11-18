@@ -1,13 +1,15 @@
-export default function Filters() {
+import React from "react";
+
+export default function Filters({ category = "All", onChange }) {
   const categories = [
     "All",
-    "Arts",
-    "Business",
     "Music and Theater",
-    "Culture",
+    "Tech",
     "Sports",
+    "Comedy",
     "Education",
-    "Others"
+    "Business",
+    "Others",
   ];
 
   return (
@@ -16,7 +18,11 @@ export default function Filters() {
         {categories.map((cat) => (
           <button
             key={cat}
-            className="flex-shrink-0 px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-green-100 hover:border-green-400 font-medium transition text-sm sm:text-base"
+            onClick={() => onChange && onChange(cat)}
+            className={
+              "flex-shrink-0 px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-green-100 hover:border-green-400 font-medium transition text-sm sm:text-base " +
+              (category === cat ? "bg-green-500 text-white border-green-500" : "")
+            }
           >
             {cat}
           </button>

@@ -33,7 +33,6 @@ app.post(
     )
 );
 
-// Now the usual middleware for other routes:
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

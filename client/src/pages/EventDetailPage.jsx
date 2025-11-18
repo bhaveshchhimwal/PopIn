@@ -1,95 +1,31 @@
-// src/pages/EventDetail.jsx
-import React, { useEffect, useState } from "react";
+// src/pages/EventDetailPage.jsx
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "../utils/axiosInstance.js";
 import Navbar from "../components/events/Navbar.jsx";
+import useEventDetail from "../components/events/EventDetail.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 
-export default function EventDetail() {
+export default function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const [error, setError] = useState("");
+  const {
+    event,
+    loading,
+    booking,
+    quantity,
+    error,
+    setQuantity,
+    formattedDateTime,
+    handleBook,
+  } = useEventDetail(id);
 
   useEffect(() => {
-    const loadEvent = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get(`/events/${id}`, { withCredentials: true });
-        if (res && res.data) {
-          setEvent(res.data.event ?? res.data);
-        } else {
-          setError("Event not found");
-        }
-      } catch (err) {
-        console.error("Error loading event:", err);
-        setError("Failed to load event");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) loadEvent();
-  }, [id]);
-
-  const formattedDateTime = (d) => {
-    if (!d) return "";
-    try {
-      return new Date(d).toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch {
-      return String(d);
+    if (event && (event.capacity === 0 || event.capacity === "0")) {
+      showToast?.("No seats left", "error");
     }
-  };
-
-  const handleBook = async () => {
-    if (!event) return;
-    if (quantity < 1) {
-      showToast?.("Choose at least 1 ticket", "error");
-      return;
-    }
-
-    setBooking(true);
-    setError("");
-
-    try {
-      const res = await axios.post(
-        "/payments/create-checkout-session",
-        {
-          eventId: event._id ?? event.id,
-          quantity,
-        },
-        { withCredentials: true }
-      );
-
-      const { url } = res.data;
-      if (!url) throw new Error("No checkout url returned");
-
-      window.location.href = url;
-    } catch (err) {
-      console.error("Booking error:", err);
-      const serverMsg =
-        err?.response?.data?.message ?? err?.response?.data?.error ?? null;
-      const msg = serverMsg || err?.message || "Booking failed";
-
-      setError(msg);
-      showToast?.(msg, "error");
-      console.log("Full error response:", err?.response);
-    } finally {
-      setBooking(false);
-    }
-  };
+  }, [event, showToast]);
 
   if (loading) {
     return (
@@ -114,6 +50,34 @@ export default function EventDetail() {
       </div>
     );
   }
+
+
+  if (event.capacity === 0 || event.capacity === "0") {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans">
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-xl font-semibold text-red-600">No seats left</p>
+            <p className="mt-2 text-sm text-slate-700">
+              This event is sold out.
+            </p>
+            <button
+              onClick={() => navigate("/events")}
+              className="mt-4 bg-slate-800 text-white px-4 py-2 rounded"
+            >
+              Back to events
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const seatsLeftNumber =
+    typeof event.capacity === "number"
+      ? event.capacity
+      : Number(event.capacity) || 0;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
@@ -146,13 +110,15 @@ export default function EventDetail() {
               <div>
                 <div className="text-xs text-slate-500">Price</div>
                 <div className="text-lg font-semibold">
-                  {event.price != null ? `₹${event.price}` : "Free"}
+                  {event.price ? `₹${event.price}` : "Free"}
                 </div>
               </div>
 
               <div>
                 <div className="text-xs text-slate-500">Seats left</div>
-                <div className="text-sm text-slate-700">{event.capacity ?? "—"}</div>
+                <div className="text-sm text-slate-700">
+                  {event.capacity ?? "—"}
+                </div>
               </div>
             </div>
 
@@ -167,16 +133,17 @@ export default function EventDetail() {
                 >
                   -
                 </button>
+
                 <input
                   type="number"
                   value={quantity}
-                  onChange={(e) => {
-                    const val = Number(e.target.value) || 1;
-                    setQuantity(Math.max(1, val));
-                  }}
+                  onChange={(e) =>
+                    setQuantity(Math.max(1, Number(e.target.value) || 1))
+                  }
                   min={1}
                   className="w-16 text-center border rounded px-2 py-1"
                 />
+
                 <button
                   onClick={() => setQuantity((q) => q + 1)}
                   className="px-3 py-1 bg-slate-200 rounded"
@@ -187,7 +154,24 @@ export default function EventDetail() {
 
               <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-3">
                 <button
-                  onClick={handleBook}
+                  onClick={() => {
+                  
+                    if (seatsLeftNumber === 0) {
+                      showToast?.("No seats left", "error");
+                      return;
+                    }
+
+          
+                    if (quantity > seatsLeftNumber) {
+                      showToast?.(
+                        `Only ${seatsLeftNumber} seat${seatsLeftNumber > 1 ? "s" : ""} left`,
+                        "error"
+                      );
+                      return;
+                    }
+
+                    handleBook();
+                  }}
                   disabled={booking}
                   className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded disabled:opacity-60"
                 >

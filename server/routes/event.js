@@ -5,24 +5,20 @@ import {
   getEventById,
   updateEvent,
   deleteEvent,
-  getSellerEvents,         // <-- make sure this is imported
+  getSellerEvents,    
 } from "../controllers/event.js";
 import { authenticateUser, authenticateSeller } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// Seller create event
 router.post("/createevent", authenticateSeller, createEvent);
-router.post("/createvent", authenticateSeller, createEvent);
 
-// Seller-only events list
-router.get("/seller/myevents", authenticateSeller, getSellerEvents);   // <-- ADD THIS
+router.get("/seller/myevents", authenticateSeller, getSellerEvents); 
 
-// Update / delete
 router.put("/:id", authenticateSeller, updateEvent);
 router.delete("/:id", authenticateSeller, deleteEvent);
 
-// Public events
+
 router.get("/", authenticateUser, getAllEvents);
 router.get("/:id", authenticateUser, getEventById);
 

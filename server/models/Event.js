@@ -13,7 +13,7 @@ const eventSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["music", "tech", "sports", "comedy", "education", "other"],
+      enum: ["music", "tech", "sports", "comedy", "education", "other", "business"],
       default: "other",
     },
     date: {
@@ -21,29 +21,26 @@ const eventSchema = new mongoose.Schema(
       required: [true, "Event date is required"],
     },
     time: {
-      type: String, 
+      type: String,
     },
     location: {
       type: String,
       required: [true, "Event location is required"],
     },
-
-  
     image: {
-      type: String, 
+      type: String,
       default: "",
     },
     imagePublicId: {
       type: String,
     },
-
     price: {
       type: Number,
       required: true,
       min: [0, "Price must be positive"],
     },
     capacity: {
-      type: Number, 
+      type: Number,
       required: true,
       min: [1, "Capacity must be at least 1"],
     },
@@ -53,7 +50,7 @@ const eventSchema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", 
+      ref: "User",
       required: true,
     },
     status: {
