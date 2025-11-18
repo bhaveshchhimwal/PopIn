@@ -9,7 +9,7 @@ import { createAuthHandler } from "./functions/authHandler.js";
 import { useToast } from "../../../context/ToastContext.jsx";
 import { BuyerHero } from "./UI/BuyerHero.jsx";
 import { useNavigate } from "react-router-dom";
-
+import profileIcon from "../../../assets/profile.png";
 function LoginForm({ onSuccess, setMode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -118,7 +118,7 @@ export default function AuthLayout({ defaultMode = "login" }) {
           <a href="/" className="text-slate-600 hover:text-slate-900 text-sm md:text-base">
             Home
           </a>
-          <img src="/src/assets/profile.png" alt="Login" className="w-6 h-6" />
+          <img src={profileIcon} alt="Login" className="w-6 h-6" />
         </nav>
       </header>
 

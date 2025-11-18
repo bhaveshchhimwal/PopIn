@@ -1,7 +1,7 @@
 import React from "react";
 import Navbar from "../events/Navbar.jsx";
 import axios from "../../utils/axiosInstance.js";
-
+import profileIcon from "../../assets/profile.png";
 function ShortId({ value }) {
   if (!value) return null;
   const s = value.toString();
@@ -61,7 +61,7 @@ export default function ProfileView({
       <main className="max-w-6xl mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-4 mb-6 flex items-center gap-4">
           <img
-            src="/src/assets/profile.png"
+            src={profileIcon}
             alt="profile"
             className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
           />
