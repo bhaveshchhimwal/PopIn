@@ -129,7 +129,7 @@ export default function Navbar() {
                 className="w-full flex items-center gap-2 hover:text-gray-800 transition px-2 py-2"
               >
                 <img
-                  src="/src/assets/profile.png"
+                  src={profileIcon}
                   alt="Profile"
                   className="w-6 h-6 rounded-full object-cover"
                 />
