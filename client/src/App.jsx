@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import React from "react";
 import LandingPage from "./pages/LandingPage";
 import AuthLayoutBuyer from "./components/auth/authbuyer/AuthPage.jsx";
@@ -13,7 +13,7 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 export default function App() {
   return (
     <ToastProvider>
-      <HashRouter>
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
 
@@ -33,7 +33,7 @@ export default function App() {
             <Route path="/events/create" element={<EventCreatePage />} />
           </Route>
         </Routes>
-      </HashRouter>
+      </BrowserRouter>
     </ToastProvider>
   );
 }

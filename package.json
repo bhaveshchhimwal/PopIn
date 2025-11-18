@@ -35,6 +35,7 @@
     "stripe": "^19.3.1"
   },
   "devDependencies": {
+    "baseline-browser-mapping": "^2.8.29",
     "nodemon": "^3.1.10"
   }
 }

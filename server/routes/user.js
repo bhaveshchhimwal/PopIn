@@ -1,4 +1,3 @@
-// routes/userRoutes.js
 import express from "express";
 import { googleAuth, logout, signup, login, me } from "../controllers/user.js";
 import { authenticateUser } from "../middlewares/auth.js";
@@ -9,6 +8,6 @@ router.post("/signup", signup);
 router.post("/login", login);
 router.post("/google", googleAuth);
 router.post("/logout", logout);
-router.get("/me", authenticateUser, me); // Changed from Auth to authenticateUser
+router.get("/me", authenticateUser, me); 
 
 export default router;
