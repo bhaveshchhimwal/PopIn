@@ -1,7 +1,8 @@
 import React from "react";
 import { ShoppingBag, CalendarPlus, Ticket, User } from "lucide-react";
 import Logo from "../components/logo/Logo.jsx";
-
+import heroImage from "../assets/image.jpg";
+import profileIcon from "../assets/profile.png";
 const LandingPage = () => {
   return (
      <div className="font-sans min-h-screen flex flex-col">
@@ -16,7 +17,7 @@ const LandingPage = () => {
         <nav className="flex items-center gap-2 sm:gap-3">
           <a className="hover:opacity-80" href="/">
             <img
-              src="/src/assets/profile.png"
+              src={profileIcon}
               alt="Profile"
               className="w-5 h-5 sm:w-6 sm:h-6"
             />
@@ -28,7 +29,7 @@ const LandingPage = () => {
       <section
         className="relative flex flex-col items-center justify-center text-center text-white py-20 sm:py-28 px-4 bg-cover bg-center"
         style={{
-          backgroundImage: "url('src/assets/image.jpg')",
+        backgroundImage: `url(${heroImage})`,
         }}
       >
         {/* Overlay */}

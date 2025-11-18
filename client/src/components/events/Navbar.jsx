@@ -1,14 +1,10 @@
-// src/components/events/Navbar.jsx
 import React, { useState } from "react";
 import { CalendarDays, PlusCircle, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../logo/Logo";
 import axios from "../../utils/axiosInstance.js";
 import { useToast } from "../../context/ToastContext.jsx";
-
-// <- new import (minimal change)
-import profileImg from "../../assets/profile.png";
-
+import profileIcon from "../../assets/profile.png";
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -68,7 +64,7 @@ export default function Navbar() {
               className="hover:opacity-80 transition rounded-full"
             >
               <img
-                src={profileImg}
+                src={profileIcon}
                 alt="Profile"
                 className="w-6 h-6 rounded-full object-cover"
               />
@@ -133,7 +129,7 @@ export default function Navbar() {
                 className="w-full flex items-center gap-2 hover:text-gray-800 transition px-2 py-2"
               >
                 <img
-                  src={profileImg}
+                  src="/src/assets/profile.png"
                   alt="Profile"
                   className="w-6 h-6 rounded-full object-cover"
                 />
