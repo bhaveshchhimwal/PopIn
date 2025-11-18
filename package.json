@@ -4,9 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "cd client && npm install && npm run build",
-    "start": "cd server && npm start",
-    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm start\""
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

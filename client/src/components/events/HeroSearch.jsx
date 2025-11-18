@@ -1,12 +1,12 @@
 import React from "react";
 import { Search } from "lucide-react";
-
+import HeroImg from "../../assets/hero-bg.jpg";
 export default function HeroSearch({ value = "", onChange, onSearch }) {
   return (
     <section
       className="bg-cover bg-center text-white py-20 md:py-28 px-4"
       style={{
-        backgroundImage: `url('src/assets/hero-bg.jpg')`,
+        backgroundImage: `url(${HeroImg})`,
         backgroundColor: "rgba(0,0,0,0.6)",
         backgroundBlendMode: "overlay",
       }}
