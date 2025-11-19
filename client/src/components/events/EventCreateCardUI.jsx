@@ -9,7 +9,7 @@ export function EventCreateCardUI({
   loading,
   message,
 }) {
-  const categories = ["music", "tech", "sports", "comedy", "education", "other"];
+  const categories = ["music", "tech", "sports", "comedy", "education","business", "other"];
 
   return (
     <form className="space-y-5 max-w-xl bg-white p-6 rounded-xl shadow-md">
