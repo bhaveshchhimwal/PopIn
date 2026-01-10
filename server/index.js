@@ -22,21 +22,14 @@ cloudinary.config({
 
 const app = express();
 
-app.post(
-  "/api/payments/webhook",
-  express.raw({ type: "application/json" }),
-  (req, res) =>
-    import("./controllers/webhook.js").then((mod) =>
-      mod.stripeWebhookHandler(req, res)
-    )
-);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
 app.use(
   cors({
-    origin:"http://localhost:5173",
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
@@ -47,6 +40,15 @@ app.use("/api/user", userRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/tickets", ticketRoutes);
+
+app.post(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json" }),
+  (req, res) =>
+    import("./controllers/webhook.js").then((mod) =>
+      mod.stripeWebhookHandler(req, res)
+    )
+);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
