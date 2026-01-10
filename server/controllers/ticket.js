@@ -1,28 +1,41 @@
-import Ticket from "../models/Ticket.js";
-import Event from "../models/Event.js";
-import mongoose from "mongoose";
+import prisma from "../prismaClient.js";
 import { generateTicketNumber } from "../utils/generateTicketNumber.js";
-
 
 export const getTicketsDashboard = async (req, res) => {
   try {
-    const user = req.user ?? req.seller;
-    if (!user || !user._id) return res.status(401).json({ message: "Not authenticated" });
+    const auth = req.user ?? req.seller;
+    if (!auth?.id) return res.status(401).json({ message: "Not authenticated" });
 
-    const userId = user._id;
+    const userId = auth.id;
 
-    const ticketsOwned = await Ticket.find({ userId })
-      .populate("eventId")
-      .sort({ createdAt: -1 });
+    const ticketsOwned = await prisma.ticket.findMany({
+      where: { userId },
+      include: {
+        event: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-    const sellerEvents = await Event.find({ createdBy: userId }).select("_id title date image");
-    const sellerEventIds = sellerEvents.map((e) => e._id);
+    const sellerEvents = await prisma.event.findMany({
+      where: { createdById: userId },
+      select: { id: true, title: true, date: true, image: true },
+    });
+
+    const sellerEventIds = sellerEvents.map((e) => e.id);
 
     const ticketsForSellerEvents = sellerEventIds.length
-      ? await Ticket.find({ eventId: { $in: sellerEventIds } })
-          .populate("userId", "name email")
-          .populate("eventId", "title date")
-          .sort({ createdAt: -1 })
+      ? await prisma.ticket.findMany({
+          where: { eventId: { in: sellerEventIds } },
+          include: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+            event: {
+              select: { id: true, title: true, date: true },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        })
       : [];
 
     return res.json({ ticketsOwned, ticketsForSellerEvents, sellerEvents });
@@ -32,18 +45,17 @@ export const getTicketsDashboard = async (req, res) => {
   }
 };
 
-
 export const getUserTickets = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
+    if (!req.user?.id) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const userId = req.user._id;
-
-    const tickets = await Ticket.find({ userId })
-      .populate("eventId")
-      .sort({ createdAt: -1 });
+    const tickets = await prisma.ticket.findMany({
+      where: { userId: req.user.id },
+      include: { event: true },
+      orderBy: { createdAt: "desc" },
+    });
 
     return res.json({ tickets });
   } catch (error) {
@@ -52,90 +64,96 @@ export const getUserTickets = async (req, res) => {
   }
 };
 
-
 export const createTicket = async (req, res) => {
-  let session = null;
   try {
-    if (!req.user || !req.user._id) {
+    if (!req.user?.id) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { eventId, quantity = 1 } = req.body;
 
     if (!eventId) return res.status(400).json({ message: "eventId is required" });
 
     const qty = parseInt(quantity, 10);
-    if (isNaN(qty) || qty < 1) return res.status(400).json({ message: "Invalid quantity" });
-
-    try {
-      session = await mongoose.startSession();
-      session.startTransaction();
-    } catch {
-      session = null;
+    if (isNaN(qty) || qty < 1) {
+      return res.status(400).json({ message: "Invalid quantity" });
     }
 
-    const event = await Event.findById(eventId).session(session ?? undefined);
-    if (!event) {
-      if (session) await session.abortTransaction();
-      return res.status(404).json({ message: "Event not found" });
-    }
+    const result = await prisma.$transaction(async (tx) => {
+      const event = await tx.event.findUnique({
+        where: { id: eventId },
+      });
 
-    if (event.capacity !== undefined && event.capacity !== null) {
-      if (event.capacity < qty) {
-        if (session) await session.abortTransaction();
-        return res.status(400).json({ message: "Not enough tickets available" });
+      if (!event) throw new Error("Event not found");
+
+      if (event.ticketsSold + qty > event.capacity) {
+        throw new Error("Not enough tickets available");
       }
-      event.capacity -= qty;
-      await event.save({ session });
-    }
 
-    const unitPrice = Number(event.price ?? 0);
-    const totalPrice = unitPrice * qty;
+      await tx.event.update({
+        where: { id: eventId },
+        data: { ticketsSold: { increment: qty } },
+      });
 
-    const ticketDoc = {
-      userId: new mongoose.Types.ObjectId(userId),
-      eventId: new mongoose.Types.ObjectId(eventId),
-      eventName: event.title ?? event.name ?? "Event",
-      date: event.date ?? new Date(),
-      unitPrice,
-      totalPrice,
-      quantity: qty,
-      status: "active",
-      ticketNumber: generateTicketNumber(),
-    };
+      const unitPrice = Number(event.price ?? 0);
+      const totalPrice = unitPrice * qty;
 
-    const createdArr = await Ticket.create([ticketDoc], { session });
-    const createdTicket = Array.isArray(createdArr) ? createdArr[0] : createdArr;
+      const ticket = await tx.ticket.create({
+        data: {
+          userId,
+          eventId,
+          eventName: event.title,
+          eventDate: event.date,
+          unitPrice,
+          quantity: qty,
+          totalPrice,
+          status: "PENDING",
+          ticketNumber: generateTicketNumber(),
+        },
+      });
 
-    if (session) await session.commitTransaction();
+      return ticket;
+    });
 
-    await createdTicket.populate("eventId");
+    const populatedTicket = await prisma.ticket.findUnique({
+      where: { id: result.id },
+      include: { event: true },
+    });
 
-    return res.status(201).json({ ticket: createdTicket });
+    return res.status(201).json({ ticket: populatedTicket });
   } catch (error) {
     console.error("Create ticket error:", error);
-    try { if (session) await session.abortTransaction(); } catch {}
-    return res.status(500).json({ message: error?.message ?? "Failed to create ticket" });
-  } finally {
-    try { if (session) session.endSession(); } catch {}
+    return res.status(400).json({ message: error.message });
   }
 };
 
 export const getTicketsForSeller = async (req, res) => {
   try {
     const seller = req.seller ?? req.user;
-    if (!seller || !seller._id) return res.status(401).json({ message: "Not authenticated as seller" });
+    if (!seller?.id) {
+      return res.status(401).json({ message: "Not authenticated as seller" });
+    }
 
-    const sellerId = seller._id;
-    const sellerEvents = await Event.find({ createdBy: sellerId }).select("_id title date image");
+    const sellerEvents = await prisma.event.findMany({
+      where: { createdById: seller.id },
+      select: { id: true, title: true, date: true, image: true },
+    });
 
-    const eventIds = sellerEvents.map((e) => e._id);
+    const eventIds = sellerEvents.map((e) => e.id);
 
-    const tickets = await Ticket.find({ eventId: { $in: eventIds } })
-      .populate("userId", "name email")
-      .populate("eventId", "title date")
-      .sort({ createdAt: -1 });
+    const tickets = await prisma.ticket.findMany({
+      where: { eventId: { in: eventIds } },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+        event: {
+          select: { id: true, title: true, date: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
     return res.json({ sellerEvents, tickets });
   } catch (error) {
@@ -144,13 +162,20 @@ export const getTicketsForSeller = async (req, res) => {
   }
 };
 
-
 export const getTicketById = async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.id)
-      .populate("eventId")
-      .populate("userId", "name email");
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: req.params.id },
+      include: {
+        event: true,
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
     if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+
     return res.json({ ticket });
   } catch (error) {
     console.error("getTicketById error:", error);

@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import Seller from "../models/Seller.js";
+import prisma from "../prismaClient.js";
 import { validatePassword } from "../utils/validatePassword.js";
 
 dotenv.config();
@@ -20,22 +20,27 @@ export const sellerSignup = async (req, res) => {
       });
     }
 
-    const existingSeller = await Seller.findOne({ workEmail });
+    const existingSeller = await prisma.seller.findUnique({
+      where: { workEmail },
+    });
+
     if (existingSeller)
       return res.status(400).json({ message: "Seller already exists" });
 
     const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 
-    const createdSeller = await Seller.create({
-      workEmail,
-      password: hashedPassword,
-      fullName,
-      organizationName,
-      role: "seller",
+    const createdSeller = await prisma.seller.create({
+      data: {
+        workEmail,
+        password: hashedPassword,
+        fullName,
+        organizationName,
+        role: "seller",
+      },
     });
 
     const token = jwt.sign(
-      { email: createdSeller.workEmail, id: createdSeller._id, role: "seller" },
+      { email: createdSeller.workEmail, id: createdSeller.id, role: "seller" },
       jwtSecret,
       { expiresIn: "7d" }
     );
@@ -50,7 +55,7 @@ export const sellerSignup = async (req, res) => {
       })
       .status(201)
       .json({
-        id: createdSeller._id,
+        id: createdSeller.id,
         workEmail: createdSeller.workEmail,
         fullName: createdSeller.fullName,
         organizationName: createdSeller.organizationName,
@@ -66,7 +71,10 @@ export const sellerLogin = async (req, res) => {
   try {
     const { workEmail, password } = req.body;
 
-    const foundSeller = await Seller.findOne({ workEmail });
+    const foundSeller = await prisma.seller.findUnique({
+      where: { workEmail },
+    });
+
     if (!foundSeller)
       return res.status(404).json({ message: "Seller does not exist" });
 
@@ -74,7 +82,7 @@ export const sellerLogin = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
-      { email: foundSeller.workEmail, id: foundSeller._id, role: "seller" },
+      { email: foundSeller.workEmail, id: foundSeller.id, role: "seller" },
       jwtSecret,
       { expiresIn: "7d" }
     );
@@ -88,7 +96,7 @@ export const sellerLogin = async (req, res) => {
         path: "/",
       })
       .json({
-        id: foundSeller._id,
+        id: foundSeller.id,
         workEmail: foundSeller.workEmail,
         fullName: foundSeller.fullName,
         organizationName: foundSeller.organizationName,
@@ -113,7 +121,6 @@ export const sellerLogout = (req, res) => {
 };
 
 export const sellerMe = async (req, res) => {
-  // support both req.user and req.seller
   const auth = req.user || req.seller;
   if (!auth) return res.status(401).json({ error: "not authenticated" });
   return res.json({ seller: auth });

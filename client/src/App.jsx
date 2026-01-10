@@ -9,6 +9,8 @@ import EventDetail from "./pages/EventDetailPage.jsx";
 import RequireAuth from "./components/auth/RequireAuth.jsx";
 import { ToastProvider } from "./context/ToastContext";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import PaymentSuccess from "./pages/PaymentSuccess.jsx";
+import PaymentFailed from "./pages/PaymentFailed.jsx";
 
 export default function App() {
   return (
@@ -27,6 +29,8 @@ export default function App() {
             <Route path="/events" element={<ExploreEvents />} />
             <Route path="/events/:id" element={<EventDetail />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/failed" element={<PaymentFailed />} />
           </Route>
 
           <Route element={<RequireAuth userType="seller" />}>

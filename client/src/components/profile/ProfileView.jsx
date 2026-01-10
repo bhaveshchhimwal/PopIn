@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from "../events/Navbar.jsx";
 import axios from "../../utils/axiosInstance.js";
 import profileIcon from "../../assets/profile.png";
+
 function ShortId({ value }) {
   if (!value) return null;
   const s = value.toString();
@@ -24,36 +25,31 @@ export default function ProfileView({
     } catch {}
   };
 
-
   const eventIsActive = (ev) => {
     if (!ev) return false;
     if (ev.status && ev.status !== "upcoming") return false;
     if (ev.date) {
       const evDate = new Date(ev.date);
       const now = new Date();
-    
       return evDate.getTime() >= now.getTime();
     }
     return false;
   };
 
-  
   const handleDelete = async (eventId) => {
     if (!eventId) return;
     const ok = window.confirm("Are you sure you want to delete this event? This action cannot be undone.");
     if (!ok) return;
 
     try {
-      
       await axios.delete(`/events/${eventId}`, { withCredentials: true });
-
       window.location.reload();
     } catch (err) {
       console.error("Failed to delete event:", err);
       alert(err.response?.data?.message || "Failed to delete event");
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
@@ -80,7 +76,7 @@ export default function ProfileView({
             <h3 className="text-lg sm:text-xl font-semibold mb-3">Events you created</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {createdEvents.map((ev) => {
-                const id = ev._id?.toString?.() ?? ev.id?.toString?.();
+                const id = ev.id;
                 const soldTickets = ticketsMap[id] ?? [];
 
                 return (
@@ -89,7 +85,6 @@ export default function ProfileView({
                     className="bg-white rounded-lg shadow overflow-hidden relative"
                   >
                     <div className="p-3">
-                    
                       <div className="sm:hidden mb-2 flex justify-end">
                         <button
                           onClick={() => handleDelete(id)}
@@ -141,11 +136,11 @@ export default function ProfileView({
                           <h5 className="text-sm font-medium mb-2">Buyers</h5>
                           <div className="space-y-2">
                             {soldTickets.map((t) => {
-                              const buyer = t.userId ?? {};
-                              const ticketNumber = t.ticketNumber ?? t._id;
+                              const buyer = t.user ?? {};
+                              const ticketNumber = t.ticketNumber ?? t.id;
 
                               return (
-                                <div key={t._id} className="flex items-center justify-between text-sm">
+                                <div key={t.id} className="flex items-center justify-between text-sm">
                                   <div className="flex-1">
                                     <div className="font-medium text-sm break-words">
                                       {buyer.name ?? buyer.email ?? "Buyer"}
@@ -160,7 +155,7 @@ export default function ProfileView({
                                         {ticketNumber ? (
                                           <span className="font-mono break-all">{ticketNumber}</span>
                                         ) : (
-                                          <ShortId value={t._id} />
+                                          <ShortId value={t.id} />
                                         )}
                                       </span>
 
@@ -192,89 +187,82 @@ export default function ProfileView({
           </section>
         )}
 
-        <section className="mb-6">
-          <h3 className="text-lg sm:text-xl font-semibold mb-3">Tickets you purchased</h3>
+        {!isSeller && (
+          <section className="mb-6">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3">Tickets you purchased</h3>
 
-          {ticketsOwned?.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-4 text-slate-600">No tickets found.</div>
-          ) : (
-            <div className="space-y-3">
-              {ticketsOwned.map((ticket) => {
-                const event = ticket.eventId ?? { title: ticket.eventName, _id: ticket.eventId };
-                const ticketNumber = ticket.ticketNumber ?? ticket._id;
+            {ticketsOwned?.length === 0 ? (
+              <div className="bg-white rounded-lg shadow p-4 text-slate-600">No tickets found.</div>
+            ) : (
+              <div className="space-y-3">
+                {ticketsOwned.map((ticket) => {
+                  const event = ticket.event ?? { title: ticket.eventName, id: ticket.eventId };
+                  const ticketNumber = ticket.ticketNumber ?? ticket.id;
+                  const active = eventIsActive(event);
 
-                const active = eventIsActive(event);
-
-                return (
-                  <div
-                    key={ticket._id}
-                    className="bg-white rounded-lg shadow p-3 flex flex-col sm:flex-row gap-3 items-start"
-                  >
-                    <div className="w-full sm:w-40 flex-shrink-0">
-                      <img
-                        src={event?.image || "/src/assets/hero-bg.jpg"}
-                        alt={event?.title}
-                        className="w-full h-28 object-cover rounded"
-                      />
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm sm:text-lg font-semibold break-words">{event?.title}</h4>
-            
-                        {active ? (
-                          <span className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
-                            Inactive
-                          </span>
-                        )}
+                  return (
+                    <div
+                      key={ticket.id}
+                      className="bg-white rounded-lg shadow p-3 flex flex-col sm:flex-row gap-3 items-start"
+                    >
+                      <div className="w-full sm:w-40 flex-shrink-0">
+                        <img
+                          src={event?.image || "/src/assets/hero-bg.jpg"}
+                          alt={event?.title}
+                          className="w-full h-28 object-cover rounded"
+                        />
                       </div>
 
-                      <p className="text-xs sm:text-sm text-slate-600">
-                        {new Date(ticket.createdAt).toLocaleString()}
-                      </p>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm sm:text-lg font-semibold break-words">{event?.title}</h4>
 
-                      <div className="mt-2 text-sm text-slate-700">
-                        <div>
-                          <strong>Quantity:</strong> {ticket.quantity ?? 1}
-                        </div>
-                        <div>
-                          <strong>Price:</strong> ₹
-                          {ticket.totalPrice ?? ticket.price ?? ticket.unitPrice ?? "—"}
-                        </div>
-
-    
-                        <div className="mt-2 text-sm">
-                          <strong>Ticket No:</strong>{" "}
-                          <span className="font-mono break-all">{ticketNumber}</span>
-
-                          {ticketNumber && (
-                            <button
-                              onClick={() => copy(ticketNumber)}
-                              className="ml-2 mt-1 sm:ml-2 text-xs px-2 py-1 border rounded"
-                            >
-                              Copy
-                            </button>
+                          {active ? (
+                            <span className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
+                              Inactive
+                            </span>
                           )}
                         </div>
+
+                        <p className="text-xs sm:text-sm text-slate-600">
+                          {new Date(ticket.createdAt).toLocaleString()}
+                        </p>
+
+                        <div className="mt-2 text-sm text-slate-700">
+                          <div>
+                            <strong>Quantity:</strong> {ticket.quantity ?? 1}
+                          </div>
+                          <div>
+                            <strong>Price:</strong> ₹
+                            {ticket.totalPrice ?? ticket.price ?? ticket.unitPrice ?? "—"}
+                          </div>
+
+                          <div className="mt-2 text-sm">
+                            <strong>Ticket No:</strong>{" "}
+                            <span className="font-mono break-all">{ticketNumber}</span>
+
+                            {ticketNumber && (
+                              <button
+                                onClick={() => copy(ticketNumber)}
+                                className="ml-2 mt-1 sm:ml-2 text-xs px-2 py-1 border rounded"
+                              >
+                                Copy
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    <button
-                      onClick={() => navigate(`/events/${event._id}`)}
-                      className="text-sm bg-slate-800 text-white px-3 py-2 rounded w-full sm:w-auto mt-2 sm:mt-0"
-                    >
-                      View event
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
 
         {isSeller && ticketsForSellerEvents?.length > 0 && (
           <section className="mb-6">
@@ -282,20 +270,19 @@ export default function ProfileView({
 
             <div className="space-y-2">
               {ticketsForSellerEvents.map((t) => {
-                const event = t.eventId ?? {};
-                const buyer = t.userId ?? {};
-                const ticketNumber = t.ticketNumber ?? t._id;
-
+                const event = t.event ?? {};
+                const buyer = t.user ?? {};
+                const ticketNumber = t.ticketNumber ?? t.id;
                 const active = eventIsActive(event);
 
                 return (
                   <div
-                    key={t._id}
+                    key={t.id}
                     className="bg-white rounded-lg shadow p-3 flex flex-col sm:flex-row justify-between gap-3"
                   >
                     <div>
                       <div className="font-medium text-sm break-words">{event.title ?? "Event"}</div>
-        
+
                       {active ? (
                         <div className="text-xs mt-1 bg-emerald-50 inline-block px-2 py-1 rounded-full text-emerald-700 border border-emerald-100">Active</div>
                       ) : (

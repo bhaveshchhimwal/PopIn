@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function EventCard({ event }) {
   const navigate = useNavigate();
-  const { title, date, location, image, price, _id } = event;
+  const { title, date, location, image, price, id } = event;
 
   const formattedDate = date
     ? new Date(date).toLocaleDateString(undefined, {
@@ -16,7 +16,7 @@ export default function EventCard({ event }) {
   return (
     <div
       className="bg-white shadow-md rounded-2xl overflow-hidden hover:shadow-lg transition cursor-pointer"
-      onClick={() => navigate(`/events/${_id}`)} 
+      onClick={() => navigate(`/events/${id}`)}
     >
       <img
         src={image || "/assets/sample-event.jpg"}
@@ -40,8 +40,8 @@ export default function EventCard({ event }) {
 
           <button
             onClick={(e) => {
-              e.stopPropagation(); 
-              navigate(`/events/${_id}`);
+              e.stopPropagation();
+              navigate(`/events/${id}`);
             }}
             className="ml-4 bg-green-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-600"
           >

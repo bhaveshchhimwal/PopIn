@@ -1,115 +1,85 @@
 import Stripe from "stripe";
 import dotenv from "dotenv";
-import Ticket from "../models/Ticket.js";
-import Event from "../models/Event.js";
-import mongoose from "mongoose";
+import prisma from "../prismaClient.js";
 import { generateTicketNumber } from "../utils/generateTicketNumber.js";
 
 dotenv.config();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2022-11-15" });
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2022-11-15",
+});
 
 export const stripeWebhookHandler = async (req, res) => {
   const sig = req.headers["stripe-signature"];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  console.log("Stripe webhook hit:", new Date().toISOString());
-  console.log("signature present:", !!sig);
-  if (!req.body) console.warn("Warning: req.body is falsy; expected Buffer from express.raw");
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-      const metadata = session.metadata || {};
-      const eventId = metadata.eventId;
-      const quantity = parseInt(metadata.quantity || "1", 10);
-      const userId = metadata.userId;
+  if (event.type !== "checkout.session.completed") {
+    return res.json({ received: true });
+  }
 
-      console.log("Processing checkout.session.completed:", {
-        sessionId: session.id,
-        eventId,
-        quantity,
-        userId,
+  const session = event.data.object;
+  const { eventId, userId, quantity } = session.metadata;
+  const qty = parseInt(quantity, 10);
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const ev = await tx.event.findUnique({
+        where: { id: eventId },
       });
 
-      if (!eventId || !userId) {
-        console.error("Missing eventId or userId in metadata");
-        return res.status(200).json({ received: true });
+      if (!ev || ev.capacity < qty) {
+        throw new Error("NOT_ENOUGH_TICKETS");
       }
 
-      if (!mongoose.Types.ObjectId.isValid(eventId) || !mongoose.Types.ObjectId.isValid(userId)) {
-        console.error("Invalid ObjectId in metadata", { eventId, userId });
-        return res.status(200).json({ received: true });
-      }
+      await tx.event.update({
+        where: { id: eventId },
+        data: {
+          capacity: { decrement: qty },
+        },
+      });
 
-      const existingTicket = await Ticket.findOne({ stripeSessionId: session.id });
-      if (existingTicket) {
-        console.log("Ticket already exists for session:", session.id);
-        return res.status(200).json({ received: true });
-      }
-
-      const ev = await Event.findById(eventId);
-      if (!ev) {
-        console.warn("Event not found:", eventId);
-        return res.status(200).json({ received: true });
-      }
-
-      const mongoSession = await mongoose.startSession();
-
-      try {
-        await mongoSession.startTransaction();
-
-        if (ev.capacity !== undefined && ev.capacity !== null) {
-          if (ev.capacity < quantity) {
-            console.warn("Not enough capacity for event:", eventId);
-            await mongoSession.abortTransaction();
-            return res.status(200).json({ received: true });
-          }
-          ev.capacity -= quantity;
-          await ev.save({ session: mongoSession });
-        }
-
-        const unitPrice = Number(ev.price ?? 0);
-        const totalPrice = unitPrice * quantity;
-
-        const ticketDoc = {
-          userId: new mongoose.Types.ObjectId(userId),
-          eventId: new mongoose.Types.ObjectId(eventId),
-          eventName: ev.title ?? ev.name ?? "Event",
-          date: ev.date ?? new Date(),
-          unitPrice,
-          totalPrice,
-          quantity,
-          status: "active",
+      await tx.ticket.create({
+        data: {
+          userId,
+          eventId,
+          eventName: ev.title,
+          eventDate: ev.date,
+          unitPrice: ev.price,
+          quantity: qty,
+          totalPrice: ev.price * qty,
           stripeSessionId: session.id,
-          purchaseDate: new Date(),
           ticketNumber: generateTicketNumber(),
-        };
+          status: "CONFIRMED",
+          purchaseDate: new Date(),
+        },
+      });
+    });
 
-        const createdArr = await Ticket.create([ticketDoc], { session: mongoSession });
-        const createdTicket = createdArr[0];
+    return res.json({ received: true });
 
-        await mongoSession.commitTransaction();
-        console.log("Ticket created:", createdTicket._id.toString());
-      } catch (err) {
-        console.error("Ticket creation error:", err);
-        try { await mongoSession.abortTransaction(); } catch (e) {}
-        return res.status(500).json({ error: "ticket_creation_failed", message: err.message });
-      } finally {
-        mongoSession.endSession();
+  } catch (err) {
+    console.error("Webhook failed:", err.message);
+
+  
+    if (session.payment_intent) {
+      try {
+        await stripe.refunds.create({
+          payment_intent: session.payment_intent,
+        });
+      } catch (refundErr) {
+        console.error("Refund failed:", refundErr.message);
       }
     }
-
-    return res.status(200).json({ received: true });
-  } catch (err) {
-    console.error("Webhook processing error:", err);
-    return res.status(500).json({ error: "webhook_processing_error", message: err.message });
+    return res.json({ received: true });
   }
 };

@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EventCategory {
+  music
+  tech
+  sports
+  comedy
+  education
+  business
+  other
+}
+
+enum EventStatus {
+  upcoming
+  completed
+  cancelled
+}
+
+enum TicketStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  USED
+}
+
+model User {
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String?
+  googleId String? @unique
+  role     String  @default("user")
+
+  tickets Ticket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Seller {
+  id               String @id @default(uuid())
+  fullName         String
+  organizationName String
+  workEmail        String @unique
+  password         String
+  role             String @default("seller")
+
+  events Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id            String        @id @default(uuid())
+  title         String
+  description   String?
+  category      EventCategory @default(other)
+  date          DateTime
+  time          String?
+  location      String
+  image         String        @default("")
+  imagePublicId String?
+  price         Float
+  capacity      Int
+  ticketsSold   Int           @default(0)
+  status        EventStatus   @default(upcoming)
+
+  createdById String
+  createdBy   Seller @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tickets   Ticket[]
+}
+
+model Ticket {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+
+  eventName String
+  eventDate DateTime
+
+  unitPrice  Float
+  quantity   Int   @default(1)
+  totalPrice Float
+
+  paymentIntentId String? @unique
+  stripeSessionId String?
+
+  ticketNumber String       @unique
+  status       TicketStatus @default(PENDING)
+
+  purchaseDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([eventId])
+}

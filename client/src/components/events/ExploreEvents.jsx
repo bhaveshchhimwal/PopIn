@@ -10,7 +10,6 @@ export default function ExploreEvents() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  
   const [filters, setFilters] = useState({
     q: "",
     category: "All",
@@ -18,44 +17,33 @@ export default function ExploreEvents() {
     limit: 12,
   });
 
-
   const categoryMap = {
     "music and theater": "music",
     music: "music",
-
     tech: "tech",
     technology: "tech",
-
     sports: "sports",
     comedy: "comedy",
     education: "education",
-
     business: "business",
-
     others: "other",
     other: "other",
-
     all: null,
   };
 
   const mapCategoryForApi = (uiCategory) => {
     if (!uiCategory) return undefined;
     const key = String(uiCategory).trim().toLowerCase();
-
-    if (Object.prototype.hasOwnProperty.call(categoryMap, key)) {
-      return categoryMap[key]; 
-    }
-   
-    return uiCategory;
+    return Object.prototype.hasOwnProperty.call(categoryMap, key)
+      ? categoryMap[key]
+      : uiCategory;
   };
 
-  
   const fetchEvents = async (params) => {
     setLoading(true);
     setError("");
     try {
       const res = await axios.get("/events", { params });
-    
       setEvents(Array.isArray(res.data) ? res.data : res.data.events || []);
     } catch (err) {
       console.error("fetchEvents error:", err);
@@ -66,10 +54,8 @@ export default function ExploreEvents() {
     }
   };
 
-
   useEffect(() => {
     const handler = setTimeout(() => {
-    
       const params = {};
       if (filters.q) params.q = filters.q;
 
@@ -85,7 +71,6 @@ export default function ExploreEvents() {
     }, 350);
 
     return () => clearTimeout(handler);
-    
   }, [filters.q, filters.category, filters.page, filters.limit]);
 
   const handleQueryChange = (q) => {
@@ -104,11 +89,10 @@ export default function ExploreEvents() {
           value={filters.q}
           onChange={handleQueryChange}
           onSearch={() =>
-          
             fetchEvents({
               q: filters.q,
               category:
-                filters.category && filters.category !== "All"
+                filters.category !== "All"
                   ? mapCategoryForApi(filters.category)
                   : undefined,
               page: 1,
@@ -116,6 +100,7 @@ export default function ExploreEvents() {
             })
           }
         />
+
         <Filters category={filters.category} onChange={handleCategoryChange} />
 
         {loading ? (
@@ -127,7 +112,7 @@ export default function ExploreEvents() {
         ) : (
           <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto my-12 px-4">
             {events.map((event) => (
-              <EventCard key={event._id || event.id} event={event} />
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         )}

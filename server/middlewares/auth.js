@@ -16,7 +16,7 @@ export const authenticateUser = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     req.user = {
-      _id: decoded.id ?? decoded.sub,
+      id: decoded.id ?? decoded.sub,
       email: decoded.email ?? null,
       role: decoded.role ?? null,
     };
@@ -40,12 +40,11 @@ export const authenticateSeller = (req, res, next) => {
     }
 
     const userObj = {
-      _id: decoded.id ?? decoded.sub,
+      id: decoded.id ?? decoded.sub,
       email: decoded.email ?? null,
       role: decoded.role,
     };
 
-  // controllers can use req.user or req.seller
     req.user = userObj;
     req.seller = userObj;
 

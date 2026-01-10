@@ -1,7 +1,5 @@
-// index.js
 import dotenv from "dotenv";
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
@@ -25,7 +23,7 @@ cloudinary.config({
 const app = express();
 
 app.post(
-  "/payments/webhook",
+  "/api/payments/webhook",
   express.raw({ type: "application/json" }),
   (req, res) =>
     import("./controllers/webhook.js").then((mod) =>
@@ -38,25 +36,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin:"http://localhost:5173",
     credentials: true,
   })
 );
 
-app.use((req, res, next) => {
-  console.log("Request:", req.method, req.path);
-  next();
-});
-
-(async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URL);
-    console.log("MongoDB connected");
-  } catch (err) {
-    console.error("MongoDB connection error:", err);
-    process.exit(1);
-  }
-})();
 
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/user", userRoutes);

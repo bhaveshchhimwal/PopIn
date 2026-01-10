@@ -20,23 +20,31 @@ export default function ProfilePage() {
     try {
       const res = await axios
         .get("/user/me", { withCredentials: true })
-        .catch(() => axios.get("/seller/me", { withCredentials: true }).catch(() => null));
+        .catch(() =>
+          axios.get("/seller/me", { withCredentials: true }).catch(() => null)
+        );
 
       if (!res || !res.data) {
         navigate("/", { replace: true });
         return;
       }
+
       const auth = res.data.user ?? res.data.seller ?? res.data;
       setUser(auth);
 
       if (auth.role === "seller") {
-        const ev = await axios.get("/events/seller/myevents", { withCredentials: true }).catch(() => null);
+        const ev = await axios
+          .get("/events/seller/myevents", { withCredentials: true })
+          .catch(() => null);
         if (ev) setCreatedEvents(ev.data.events ?? []);
       } else {
         setCreatedEvents([]);
       }
 
-      const tRes = await axios.get("/tickets", { withCredentials: true }).catch(() => null);
+      const tRes = await axios
+        .get("/tickets", { withCredentials: true })
+        .catch(() => null);
+
       if (tRes) {
         setTicketsOwned(tRes.data.ticketsOwned ?? []);
         setTicketsForSellerEvents(tRes.data.ticketsForSellerEvents ?? []);
@@ -59,7 +67,6 @@ export default function ProfilePage() {
   }, [fetchProfileData]);
 
   if (loading) return <div>Loading...</div>;
-
   if (!user) return null;
 
   const isSeller = user.role === "seller";
@@ -67,19 +74,19 @@ export default function ProfilePage() {
   const ticketsMap = {};
   ticketsForSellerEvents.forEach((t) => {
     const ev = t.eventId;
-    const id = ev?._id ?? ev ?? t.eventId;
+    const id = ev?.id ?? t.eventId;
     if (!ticketsMap[id]) ticketsMap[id] = [];
     ticketsMap[id].push(t);
   });
 
-
   const handleDeleteEvent = async (eventId) => {
-    const ok = window.confirm("Are you sure you want to delete this event? This cannot be undone.");
+    const ok = window.confirm(
+      "Are you sure you want to delete this event? This cannot be undone."
+    );
     if (!ok) return;
 
     try {
-      await axios.delete(`/events/${eventId}`, { withCredentials: true });
-    
+      await axios.delete(`/events/${eventId}`, { withCredentials: true }); // ensure uuid
       await fetchProfileData();
     } catch (err) {
       console.error("Failed to delete event", err);

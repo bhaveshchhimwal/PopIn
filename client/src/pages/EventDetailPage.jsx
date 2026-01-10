@@ -1,5 +1,4 @@
-// src/pages/EventDetailPage.jsx
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/events/Navbar.jsx";
 import useEventDetail from "../components/events/EventDetail.jsx";
@@ -9,6 +8,8 @@ export default function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+
+  const toastShownRef = useRef(false);
 
   const {
     event,
@@ -21,9 +22,15 @@ export default function EventDetailPage() {
     handleBook,
   } = useEventDetail(id);
 
+
   useEffect(() => {
-    if (event && (event.capacity === 0 || event.capacity === "0")) {
+    if (
+      event &&
+      (event.capacity === 0 || event.capacity === "0") &&
+      !toastShownRef.current
+    ) {
       showToast?.("No seats left", "error");
+      toastShownRef.current = true;
     }
   }, [event, showToast]);
 
@@ -41,7 +48,7 @@ export default function EventDetailPage() {
         <div className="text-center">
           <p className="text-lg font-medium mb-2">Event not found</p>
           <button
-            onClick={() => navigate("/events")}
+            onClick={() => navigate("/events", { replace: true })}
             className="mt-2 bg-slate-800 text-white px-4 py-2 rounded"
           >
             Back to events
@@ -63,7 +70,7 @@ export default function EventDetailPage() {
               This event is sold out.
             </p>
             <button
-              onClick={() => navigate("/events")}
+              onClick={() => navigate("/events", { replace: true })}
               className="mt-4 bg-slate-800 text-white px-4 py-2 rounded"
             >
               Back to events
@@ -126,6 +133,7 @@ export default function EventDetailPage() {
               <label className="block text-sm font-medium text-slate-700">
                 Quantity
               </label>
+
               <div className="mt-2 inline-flex items-center gap-2">
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -137,10 +145,10 @@ export default function EventDetailPage() {
                 <input
                   type="number"
                   value={quantity}
+                  min={1}
                   onChange={(e) =>
                     setQuantity(Math.max(1, Number(e.target.value) || 1))
                   }
-                  min={1}
                   className="w-16 text-center border rounded px-2 py-1"
                 />
 
@@ -155,16 +163,16 @@ export default function EventDetailPage() {
               <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-3">
                 <button
                   onClick={() => {
-                  
                     if (seatsLeftNumber === 0) {
                       showToast?.("No seats left", "error");
                       return;
                     }
 
-          
                     if (quantity > seatsLeftNumber) {
                       showToast?.(
-                        `Only ${seatsLeftNumber} seat${seatsLeftNumber > 1 ? "s" : ""} left`,
+                        `Only ${seatsLeftNumber} seat${
+                          seatsLeftNumber > 1 ? "s" : ""
+                        } left`,
                         "error"
                       );
                       return;
@@ -186,7 +194,9 @@ export default function EventDetailPage() {
                 </button>
               </div>
 
-              {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
+              {error && (
+                <div className="mt-3 text-sm text-red-600">{error}</div>
+              )}
             </div>
           </div>
         </div>

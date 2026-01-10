@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
 import multer from "multer";
-import Event from "../models/Event.js";
+import prisma from "../prismaClient.js";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -16,7 +16,6 @@ const uploadBufferToCloudinary = (buffer, options = {}) => {
   });
 };
 
-
 function parseDateAndTime(dateInput, timeInput) {
   if (!dateInput) return null;
   const base = new Date(dateInput);
@@ -24,10 +23,7 @@ function parseDateAndTime(dateInput, timeInput) {
 
   if (timeInput && typeof timeInput === "string" && timeInput.trim() !== "") {
     const parts = timeInput.trim().split(":").map((p) => parseInt(p, 10));
-    const hours = Number.isNaN(parts[0]) ? 0 : parts[0];
-    const minutes = Number.isNaN(parts[1]) ? 0 : parts[1];
-    const seconds = Number.isNaN(parts[2]) ? 0 : (parts[2] ?? 0);
-    base.setHours(hours, minutes, seconds, 0);
+    base.setHours(parts[0] || 0, parts[1] || 0, parts[2] || 0, 0);
   }
 
   return base;
@@ -37,7 +33,7 @@ export const createEvent = [
   upload.single("image"),
   async (req, res) => {
     try {
-      if (!req.user || !req.user._id) {
+      if (!req.user || !req.user.id) {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
@@ -46,35 +42,41 @@ export const createEvent = [
         return res.status(400).json({ message: "Invalid date or time" });
       }
 
-      const eventData = {
-        ...req.body,
-        createdBy: req.user._id,
-       
-        date: parsedDate,
-      
-        time: req.body.time ?? "",
-      };
+      let image = "";
+      let imagePublicId = null;
 
-      if (req.file && req.file.buffer) {
-        try {
-          const result = await uploadBufferToCloudinary(req.file.buffer, {
-            folder: "popin/events",
-            resource_type: "image",
-            transformation: [{ width: 1200, crop: "limit" }],
-          });
-          eventData.image = result.secure_url;
-          eventData.imagePublicId = result.public_id;
-        } catch (uploadErr) {
-          console.error("Cloudinary upload error:", uploadErr);
-          return res.status(500).json({ message: "Failed to upload image" });
-        }
+      if (req.file?.buffer) {
+        const result = await uploadBufferToCloudinary(req.file.buffer, {
+          folder: "popin/events",
+          resource_type: "image",
+          transformation: [{ width: 1200, crop: "limit" }],
+        });
+        image = result.secure_url;
+        imagePublicId = result.public_id;
       }
 
-      const event = new Event(eventData);
-      await event.save();
+      const status =
+        parsedDate.getTime() < Date.now() ? "completed" : "upcoming";
+
+      const event = await prisma.event.create({
+        data: {
+          title: req.body.title,
+          description: req.body.description,
+          category: req.body.category,
+          date: parsedDate,
+          time: req.body.time ?? "",
+          location: req.body.location,
+          price: Number(req.body.price),
+          capacity: Number(req.body.capacity),
+          image,
+          imagePublicId,
+          status,
+          createdById: req.user.id,
+        },
+      });
+
       res.status(201).json(event);
     } catch (error) {
-      console.error("createEvent error:", error);
       res.status(400).json({ message: error.message });
     }
   },
@@ -83,96 +85,93 @@ export const createEvent = [
 export const getAllEvents = async (req, res) => {
   try {
     const { category, location, q, search } = req.query;
-    const filter = {};
+
+    const where = { status: "upcoming" };
+
     const categoryMap = {
       "music and theater": "music",
       music: "music",
-
       tech: "tech",
       technology: "tech",
-
       sports: "sports",
       comedy: "comedy",
       education: "education",
-
       business: "business",
-
       others: "other",
       other: "other",
-
-      all: null,
     };
 
     if (category) {
-      const key = String(category).trim().toLowerCase();
-      const mapped = categoryMap[key];
-      if (mapped) {
-        filter.category = mapped;
-      }
+      const mapped = categoryMap[String(category).toLowerCase()];
+      if (mapped) where.category = mapped;
     }
 
     if (location) {
-      filter.location = new RegExp(location, "i");
+      where.location = { contains: location, mode: "insensitive" };
     }
 
     const searchTerm = q || search;
-    if (searchTerm && String(searchTerm).trim() !== "") {
-      const regex = new RegExp(String(searchTerm).trim(), "i");
-      filter.$or = [{ title: regex }, { description: regex }];
+    if (searchTerm?.trim()) {
+      where.OR = [
+        { title: { contains: searchTerm, mode: "insensitive" } },
+        { description: { contains: searchTerm, mode: "insensitive" } },
+      ];
     }
 
-  
-    filter.status = "upcoming";
-
-   
-    const rawEvents = await Event.find(filter)
-      .populate("createdBy", "name email")
-      .sort({ date: 1 });
-
-   
-    function combineDateAndTime(ev) {
-      if (!ev || !ev.date) return null;
-      const base = new Date(ev.date);
-
-      if (ev.time && typeof ev.time === "string" && ev.time.trim() !== "") {
-        const parts = ev.time.trim().split(":").map((p) => parseInt(p, 10));
-        const hours = Number.isNaN(parts[0]) ? 0 : parts[0];
-        const minutes = Number.isNaN(parts[1]) ? 0 : parts[1];
-        const seconds = Number.isNaN(parts[2]) ? 0 : (parts[2] ?? 0);
-        base.setHours(hours, minutes, seconds, 0);
-      } else {
-      
-        base.setHours(23, 59, 59, 999);
-      }
-      return base;
-    }
-
-    const now = new Date();
-
-  
-    const events = rawEvents.filter((ev) => {
-      const combined = combineDateAndTime(ev);
-      if (!combined) return false; 
-      return combined.getTime() >= now.getTime();
+    const events = await prisma.event.findMany({
+      where,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            fullName: true,
+            organizationName: true,
+            workEmail: true,
+          },
+        },
+      },
+      orderBy: { date: "asc" },
     });
 
-   
-    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const now = Date.now();
 
-    res.status(200).json(events);
-  } catch (error) {
-    console.error("getAllEvents error:", error);
+    const filtered = events.filter((ev) => {
+      const base = new Date(ev.date);
+      if (ev.time?.trim()) {
+        const parts = ev.time.split(":").map((p) => parseInt(p, 10));
+        base.setHours(parts[0] || 0, parts[1] || 0, parts[2] || 0, 0);
+      } else {
+        base.setHours(23, 59, 59, 999);
+      }
+      return base.getTime() >= now;
+    });
+
+    res.status(200).json(filtered);
+  } catch {
     res.status(500).json({ message: "Failed to fetch events" });
   }
 };
 
 export const getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id).populate("createdBy", "name email");
+    const event = await prisma.event.findUnique({
+      where: { id: req.params.id },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            fullName: true,
+            organizationName: true,
+            workEmail: true,
+          },
+        },
+      },
+    });
+
     if (!event) return res.status(404).json({ message: "Event not found" });
+
     res.status(200).json(event);
-  } catch (error) {
-    console.error("getEventById error:", error);
+  } catch {
     res.status(500).json({ message: "Error fetching event" });
   }
 };
@@ -181,60 +180,65 @@ export const updateEvent = [
   upload.single("image"),
   async (req, res) => {
     try {
-      const event = await Event.findById(req.params.id);
+      const event = await prisma.event.findUnique({
+        where: { id: req.params.id },
+      });
+
       if (!event) return res.status(404).json({ message: "Event not found" });
-
-      if (event.createdBy.toString() !== req.user._id.toString()) {
+      if (event.createdById !== req.user.id)
         return res.status(403).json({ message: "Not authorized" });
-      }
 
-      if (req.file && req.file.buffer) {
+      let image = event.image;
+      let imagePublicId = event.imagePublicId;
+
+      if (req.file?.buffer) {
         const result = await uploadBufferToCloudinary(req.file.buffer, {
           folder: "popin/events",
           resource_type: "image",
         });
 
-        if (event.imagePublicId) {
-          await cloudinary.uploader.destroy(event.imagePublicId);
+        if (imagePublicId) {
+          await cloudinary.uploader.destroy(imagePublicId);
         }
 
-        event.image = result.secure_url;
-        event.imagePublicId = result.public_id;
+        image = result.secure_url;
+        imagePublicId = result.public_id;
       }
 
-    
-      const fields = [
-        "title",
-        "description",
-        "category",
-    
-        "location",
-        "price",
-        "capacity",
-        "status",
-      ];
-
-      fields.forEach((f) => {
-        if (req.body[f] !== undefined) event[f] = req.body[f];
-      });
-
-     
+      let parsedDate = event.date;
       if (req.body.date !== undefined || req.body.time !== undefined) {
-        const newDateInput = req.body.date !== undefined ? req.body.date : event.date;
-        const newTimeInput = req.body.time !== undefined ? req.body.time : event.time;
-        const parsed = parseDateAndTime(newDateInput, newTimeInput);
-        if (!parsed) {
+        parsedDate = parseDateAndTime(
+          req.body.date ?? event.date,
+          req.body.time ?? event.time
+        );
+        if (!parsedDate) {
           return res.status(400).json({ message: "Invalid date or time" });
         }
-        event.date = parsed;
-       
-        event.time = req.body.time !== undefined ? req.body.time : event.time;
       }
 
-      await event.save();
-      res.status(200).json(event);
+      const updated = await prisma.event.update({
+        where: { id: event.id },
+        data: {
+          title: req.body.title ?? event.title,
+          description: req.body.description ?? event.description,
+          category: req.body.category ?? event.category,
+          location: req.body.location ?? event.location,
+          price:
+            req.body.price !== undefined ? Number(req.body.price) : event.price,
+          capacity:
+            req.body.capacity !== undefined
+              ? Number(req.body.capacity)
+              : event.capacity,
+          status: req.body.status ?? event.status,
+          date: parsedDate,
+          time: req.body.time ?? event.time,
+          image,
+          imagePublicId,
+        },
+      });
+
+      res.status(200).json(updated);
     } catch (error) {
-      console.error("updateEvent error:", error);
       res.status(400).json({ message: error.message });
     }
   },
@@ -242,38 +246,43 @@ export const updateEvent = [
 
 export const getSellerEvents = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
+    if (!req.user?.id) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const sellerId = req.user._id;
-  
-    const events = await Event.find({ createdBy: sellerId }).sort({ date: -1 });
+    const events = await prisma.event.findMany({
+      where: { createdById: req.user.id },
+      orderBy: { date: "desc" },
+    });
 
     res.status(200).json({ events });
-  } catch (err) {
-    console.error("getSellerEvents error:", err);
+  } catch {
     res.status(500).json({ message: "Failed to fetch seller events" });
   }
 };
 
+// controllers/event.js
 export const deleteEvent = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: "Event not found" });
+    const eventId = req.params.id;
 
-    if (event.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized" });
+    const ticketsCount = await prisma.ticket.count({
+      where: { eventId },
+    });
+
+    if (ticketsCount > 0) {
+      return res.status(400).json({
+        message: "Cannot delete event. Tickets already sold.",
+      });
     }
 
-    if (event.imagePublicId) {
-      await cloudinary.uploader.destroy(event.imagePublicId);
-    }
+    await prisma.event.delete({
+      where: { id: eventId },
+    });
 
-    await event.deleteOne();
-    res.status(200).json({ message: "Event deleted successfully" });
-  } catch (error) {
-    console.error("deleteEvent error:", error);
+    res.json({ message: "Event deleted successfully" });
+  } catch (err) {
+    console.error("deleteEvent error:", err);
     res.status(500).json({ message: "Failed to delete event" });
   }
 };

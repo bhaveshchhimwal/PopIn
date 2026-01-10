@@ -73,21 +73,22 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
 
       const now = new Date();
 
-
       if (eventDateTime < now) {
         err.date = "Event date and time cannot be in the past";
       }
     }
 
     if (!form.location.trim()) err.location = "Location is required";
-    if (form.price === "" || Number(form.price) < 0)
-      err.price = "Price must be 0 or greater";
+    
+    if (form.price === "" || Number(form.price) < 100) {
+      err.price = "Price must be at least ₹100";
+    }
+    
     if (form.capacity === "" || Number(form.capacity) < 1)
       err.capacity = "Capacity must be at least 1";
 
     return err;
   };
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
