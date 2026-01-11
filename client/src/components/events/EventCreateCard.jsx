@@ -58,17 +58,19 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
     const err = {};
 
     if (!form.title.trim()) err.title = "Title is required";
+
     if (!form.date) {
       err.date = "Date is required";
     } else {
-      const d = new Date(form.date);
-      let eventDateTime = new Date(form.date);
 
+      const [year, month, day] = form.date.split("-").map(Number);
+
+      let eventDateTime;
       if (form.time) {
         const [hh, mm] = form.time.split(":").map(Number);
-        eventDateTime.setHours(hh, mm, 0, 0);
+        eventDateTime = new Date(year, month - 1, day, hh, mm, 0, 0);
       } else {
-        eventDateTime.setHours(0, 0, 0, 0);
+        eventDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
       }
 
       const now = new Date();
@@ -79,13 +81,14 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
     }
 
     if (!form.location.trim()) err.location = "Location is required";
-    
+
     if (form.price === "" || Number(form.price) < 100) {
       err.price = "Price must be at least ₹100";
     }
-    
-    if (form.capacity === "" || Number(form.capacity) < 1)
+
+    if (form.capacity === "" || Number(form.capacity) < 1) {
       err.capacity = "Capacity must be at least 1";
+    }
 
     return err;
   };

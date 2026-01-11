@@ -1,4 +1,3 @@
-// server/routes/ticket.js
 import express from "express";
 import { authenticateUser, authenticateSeller } from "../middlewares/auth.js";
 import {

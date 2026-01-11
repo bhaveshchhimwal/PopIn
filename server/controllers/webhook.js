@@ -11,17 +11,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 export const stripeWebhookHandler = async (req, res) => {
   const sig = req.headers["stripe-signature"];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
   try {
+    const body = req.body.toString('utf8');
+    
     event = stripe.webhooks.constructEvent(
-      req.body,
+      body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      webhookSecret
     );
   } catch (err) {
+    console.error("Webhook signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  console.log("Webhook event type:", event.type);
 
   if (event.type !== "checkout.session.completed") {
     return res.status(200).json({ received: true }); 

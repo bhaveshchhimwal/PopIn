@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "../utils/axiosInstance";
@@ -40,20 +39,30 @@ export default function PaymentSuccess() {
     verify();
   }, [sessionId, navigate]);
 
+ 
   if (status === "processing") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Processing your payment...
+      <div className="min-h-screen flex items-center justify-center px-4 text-center">
+        <div className="w-full max-w-sm">
+          <p className="text-base sm:text-lg font-medium">
+            Processing your payment…
+          </p>
+        </div>
       </div>
     );
   }
 
+ 
   if (status === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-white p-6 rounded shadow text-center">
-          <h2 className="text-xl font-semibold">Payment successful</h2>
-          <p className="mt-2">Redirecting to profile...</p>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-sm bg-white p-6 sm:p-8 rounded-xl shadow text-center">
+          <h2 className="text-lg sm:text-xl font-semibold text-green-600">
+            Payment successful 🎉
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-gray-600">
+            Redirecting to your profile…
+          </p>
         </div>
       </div>
     );

@@ -23,6 +23,12 @@ cloudinary.config({
 
 const app = express();
 
+app.post(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json" }),
+  stripeWebhookHandler
+);
+
 app.use(cookieParser());
 
 app.use(
@@ -30,12 +36,6 @@ app.use(
     origin: process.env.CLIENT_URL,
     credentials: true,
   })
-);
-
-app.post(
-  "/api/payments/webhook",
-  express.raw({ type: "application/json" }),
-  stripeWebhookHandler
 );
 
 app.use(express.json());
