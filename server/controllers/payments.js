@@ -68,6 +68,7 @@ export const createCheckoutSession = async (req, res) => {
     return res.status(500).json({ message: "Failed to create checkout session" });
   }
 };
+
 export const verifyCheckoutSession = async (req, res) => {
   const { sessionId } = req.query;
 

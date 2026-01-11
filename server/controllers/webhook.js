@@ -24,7 +24,7 @@ export const stripeWebhookHandler = async (req, res) => {
   }
 
   if (event.type !== "checkout.session.completed") {
-    return res.json({ received: true });
+    return res.status(200).json({ received: true }); 
   }
 
   const session = event.data.object;
@@ -65,12 +65,11 @@ export const stripeWebhookHandler = async (req, res) => {
       });
     });
 
-    return res.json({ received: true });
+    return res.status(200).json({ received: true });
 
   } catch (err) {
     console.error("Webhook failed:", err.message);
 
-  
     if (session.payment_intent) {
       try {
         await stripe.refunds.create({
@@ -80,6 +79,7 @@ export const stripeWebhookHandler = async (req, res) => {
         console.error("Refund failed:", refundErr.message);
       }
     }
-    return res.json({ received: true });
+
+    return res.status(200).json({ received: true });
   }
 };

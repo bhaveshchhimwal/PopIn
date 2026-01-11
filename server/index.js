@@ -11,6 +11,7 @@ import userRoutes from "./routes/user.js";
 import sellerRoutes from "./routes/seller.js";
 import eventRoutes from "./routes/event.js";
 import paymentsRoutes from "./routes/payments.js";
+import { stripeWebhookHandler } from "./controllers/webhook.js";
 
 dotenv.config();
 
@@ -22,9 +23,6 @@ cloudinary.config({
 
 const app = express();
 
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(
@@ -34,6 +32,14 @@ app.use(
   })
 );
 
+app.post(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json" }),
+  stripeWebhookHandler
+);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/user", userRoutes);
@@ -41,18 +47,8 @@ app.use("/api/seller", sellerRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/tickets", ticketRoutes);
 
-app.post(
-  "/api/payments/webhook",
-  express.raw({ type: "application/json" }),
-  (req, res) =>
-    import("./controllers/webhook.js").then((mod) =>
-      mod.stripeWebhookHandler(req, res)
-    )
-);
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const frontendPath = path.join(__dirname, "../client/dist");
 
 if (process.env.NODE_ENV === "production") {
