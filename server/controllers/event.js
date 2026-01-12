@@ -18,15 +18,16 @@ const uploadBufferToCloudinary = (buffer, options = {}) => {
 
 function parseDateAndTime(dateInput, timeInput) {
   if (!dateInput) return null;
-  const base = new Date(dateInput);
-  if (Number.isNaN(base.getTime())) return null;
-
-  if (timeInput && typeof timeInput === "string" && timeInput.trim() !== "") {
-    const parts = timeInput.trim().split(":").map((p) => parseInt(p, 10));
-    base.setHours(parts[0] || 0, parts[1] || 0, parts[2] || 0, 0);
-  }
-
-  return base;
+  
+  const dateTimeString = timeInput && typeof timeInput === "string" && timeInput.trim() !== ""
+    ? `${dateInput}T${timeInput.trim()}:00+05:30`
+    : `${dateInput}T00:00:00+05:30`;
+  
+  const parsedDate = new Date(dateTimeString);
+  
+  if (Number.isNaN(parsedDate.getTime())) return null;
+  
+  return parsedDate;
 }
 
 export const createEvent = [
@@ -136,14 +137,7 @@ export const getAllEvents = async (req, res) => {
     const now = Date.now();
 
     const filtered = events.filter((ev) => {
-      const base = new Date(ev.date);
-      if (ev.time?.trim()) {
-        const parts = ev.time.split(":").map((p) => parseInt(p, 10));
-        base.setHours(parts[0] || 0, parts[1] || 0, parts[2] || 0, 0);
-      } else {
-        base.setHours(23, 59, 59, 999);
-      }
-      return base.getTime() >= now;
+      return ev.date.getTime() >= now;
     });
 
     res.status(200).json(filtered);
@@ -261,7 +255,6 @@ export const getSellerEvents = async (req, res) => {
   }
 };
 
-// controllers/event.js
 export const deleteEvent = async (req, res) => {
   try {
     const eventId = req.params.id;

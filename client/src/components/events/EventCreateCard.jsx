@@ -62,17 +62,11 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
     if (!form.date) {
       err.date = "Date is required";
     } else {
-
-      const [year, month, day] = form.date.split("-").map(Number);
-
-      let eventDateTime;
-      if (form.time) {
-        const [hh, mm] = form.time.split(":").map(Number);
-        eventDateTime = new Date(year, month - 1, day, hh, mm, 0, 0);
-      } else {
-        eventDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
-      }
-
+      const dateTimeString = form.time 
+        ? `${form.date}T${form.time}:00+05:30` 
+        : `${form.date}T00:00:00+05:30`;
+      
+      const eventDateTime = new Date(dateTimeString);
       const now = new Date();
 
       if (eventDateTime < now) {
@@ -116,7 +110,7 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setMessage(" Event created successfully!");
+      setMessage("Event created successfully!");
       setForm({
         title: "",
         description: "",
@@ -135,7 +129,7 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
       const msg =
         err.response?.data?.message ||
         err.message ||
-        " Failed to create event";
+        "Failed to create event";
       setMessage(msg);
     } finally {
       setLoading(false);
