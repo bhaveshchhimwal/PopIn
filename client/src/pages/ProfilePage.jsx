@@ -66,7 +66,15 @@ export default function ProfilePage() {
     fetchProfileData();
   }, [fetchProfileData]);
 
-  if (loading) return <div>Loading...</div>;
+  // ✅ CHANGED: spinner instead of "Loading..."
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+        <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+      </div>
+    );
+  }
+
   if (!user) return null;
 
   const isSeller = user.role === "seller";
@@ -86,7 +94,7 @@ export default function ProfilePage() {
     if (!ok) return;
 
     try {
-      await axios.delete(`/events/${eventId}`, { withCredentials: true }); // ensure uuid
+      await axios.delete(`/events/${eventId}`, { withCredentials: true });
       await fetchProfileData();
     } catch (err) {
       console.error("Failed to delete event", err);

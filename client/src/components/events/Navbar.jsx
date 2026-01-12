@@ -5,6 +5,7 @@ import Logo from "../logo/Logo";
 import axios from "../../utils/axiosInstance.js";
 import { useToast } from "../../context/ToastContext.jsx";
 import profileIcon from "../../assets/profile.png";
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -35,7 +36,12 @@ export default function Navbar() {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-[52px]">
-        <div className="flex items-center">
+        
+     
+        <div
+          className="flex items-center cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           <Logo />
         </div>
 

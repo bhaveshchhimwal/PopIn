@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "../../utils/axiosInstance.js";
 import { EventCreateCardUI } from "./EventCreateCardUI.jsx";
 
 export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess }) {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -62,10 +65,10 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
     if (!form.date) {
       err.date = "Date is required";
     } else {
-      const dateTimeString = form.time 
-        ? `${form.date}T${form.time}:00+05:30` 
+      const dateTimeString = form.time
+        ? `${form.date}T${form.time}:00+05:30`
         : `${form.date}T00:00:00+05:30`;
-      
+
       const eventDateTime = new Date(dateTimeString);
       const now = new Date();
 
@@ -111,20 +114,14 @@ export function EventCreateCard({ apiEndpoint = "/events/createevent", onSuccess
       });
 
       setMessage("Event created successfully!");
-      setForm({
-        title: "",
-        description: "",
-        category: "other",
-        date: "",
-        time: "",
-        location: "",
-        price: "",
-        capacity: "",
-      });
-      setImage(null);
-      setPreview("");
-      setErrors({});
+
       if (onSuccess) onSuccess(res.data);
+
+
+      setTimeout(() => {
+        navigate("/events");
+      }, 800);
+
     } catch (err) {
       const msg =
         err.response?.data?.message ||

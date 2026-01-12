@@ -1,4 +1,3 @@
-// AuthLayoutSeller.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SellerLoginFormUI } from "./UI/LoginFormUI.jsx";
@@ -98,9 +97,9 @@ export default function AuthLayoutSeller({ defaultMode = "login" }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await axios.get('/seller/me', { withCredentials: true });
-        navigate('/events', { replace: true });
-      } catch (error) {
+        await axios.get("/seller/me", { withCredentials: true });
+        navigate("/events", { replace: true });
+      } catch {
         setCheckingAuth(false);
       }
     };
@@ -110,8 +109,8 @@ export default function AuthLayoutSeller({ defaultMode = "login" }) {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-slate-600">Loading...</div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+        <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
       </div>
     );
   }
@@ -121,10 +120,17 @@ export default function AuthLayoutSeller({ defaultMode = "login" }) {
       <header className="flex justify-between items-center px-4 py-2 shadow-sm bg-white sticky top-0 z-10">
         <Logo />
         <nav className="flex items-center space-x-3">
-          <Link to="/" className="text-slate-600 hover:text-slate-900 text-sm sm:text-base">
+          <Link
+            to="/"
+            className="text-slate-600 hover:text-slate-900 text-sm sm:text-base"
+          >
             Home
           </Link>
-          <img src={profileImg} alt="Profile" className="w-6 h-6 sm:w-8 sm:h-8" />
+          <img
+            src={profileImg}
+            alt="Profile"
+            className="w-6 h-6 sm:w-8 sm:h-8"
+          />
         </nav>
       </header>
 

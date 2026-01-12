@@ -10,6 +10,7 @@ import { useToast } from "../../../context/ToastContext.jsx";
 import { BuyerHero } from "./UI/BuyerHero.jsx";
 import { useNavigate } from "react-router-dom";
 import profileIcon from "../../../assets/profile.png";
+
 function LoginForm({ onSuccess, setMode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -92,9 +93,9 @@ export default function AuthLayout({ defaultMode = "login" }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await axios.get('/user/me', { withCredentials: true });
-        navigate('/events', { replace: true });
-      } catch (error) {
+        await axios.get("/user/me", { withCredentials: true });
+        navigate("/events", { replace: true });
+      } catch {
         setCheckingAuth(false);
       }
     };
@@ -102,10 +103,11 @@ export default function AuthLayout({ defaultMode = "login" }) {
     checkAuth();
   }, [navigate]);
 
+  // ✅ CHANGED: spinner instead of "Loading..."
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-slate-600">Loading...</div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+        <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
       </div>
     );
   }
@@ -115,7 +117,10 @@ export default function AuthLayout({ defaultMode = "login" }) {
       <header className="flex justify-between items-center px-4 py-2 shadow-sm bg-white">
         <Logo />
         <nav className="flex items-center space-x-3">
-          <a href="/" className="text-slate-600 hover:text-slate-900 text-sm md:text-base">
+          <a
+            href="/"
+            className="text-slate-600 hover:text-slate-900 text-sm md:text-base"
+          >
             Home
           </a>
           <img src={profileIcon} alt="Login" className="w-6 h-6" />

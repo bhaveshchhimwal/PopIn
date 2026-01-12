@@ -10,19 +10,14 @@ export default function RequireAuth({ userType = "buyer" }) {
   useEffect(() => {
     let mounted = true;
     const endpoint = userType === "seller" ? "/seller/me" : "/user/me";
-    
-    // Always check auth - the cookie will be sent automatically
+
     axios
       .get(endpoint, { withCredentials: true })
       .then(() => {
-        if (mounted) {
-          setAuthed(true);
-        }
+        if (mounted) setAuthed(true);
       })
-      .catch((error) => {
-        if (mounted) {
-          setAuthed(false);
-        }
+      .catch(() => {
+        if (mounted) setAuthed(false);
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -31,20 +26,22 @@ export default function RequireAuth({ userType = "buyer" }) {
     return () => {
       mounted = false;
     };
-  }, [userType]); // Only re-check if userType changes
+  }, [userType]);
 
+  // ✅ Mobile-responsive full-screen spinner only
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Checking authentication...</div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-4 border-white border-t-transparent animate-spin"></div>
       </div>
     );
   }
-  
+
   if (!authed) {
-    const loginPath = userType === "seller" ? "/seller/login" : "/buyer/login";
+    const loginPath =
+      userType === "seller" ? "/seller/login" : "/buyer/login";
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
-  
+
   return <Outlet />;
 }
