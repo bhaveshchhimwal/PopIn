@@ -22,7 +22,6 @@ export default function EventDetailPage() {
     handleBook,
   } = useEventDetail(id);
 
-
   useEffect(() => {
     if (
       event &&
@@ -36,8 +35,8 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Loading event...</div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+        <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
       </div>
     );
   }
@@ -57,7 +56,6 @@ export default function EventDetailPage() {
       </div>
     );
   }
-
 
   if (event.capacity === 0 || event.capacity === "0") {
     return (

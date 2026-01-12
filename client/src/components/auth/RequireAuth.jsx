@@ -28,11 +28,11 @@ export default function RequireAuth({ userType = "buyer" }) {
     };
   }, [userType]);
 
-  // ✅ Mobile-responsive full-screen spinner only
+
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-        <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-4 border-white border-t-transparent animate-spin"></div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+        <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
       </div>
     );
   }
