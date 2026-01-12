@@ -36,9 +36,9 @@ export const createCheckoutSession = async (req, res) => {
     const unitAmount = Math.round(Number(event.price) * 100);
 
     const successUrl =
-      `${process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
+      `${process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&payment_session=true`;
     const cancelUrl =
-      `${process.env.CLIENT_URL}/payment/failed`;
+      `${process.env.CLIENT_URL}/payment/failed?payment_session=true`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
