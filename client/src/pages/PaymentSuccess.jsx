@@ -7,8 +7,8 @@ export default function PaymentSuccess() {
   const [params] = useSearchParams();
   const sessionId = params.get("session_id");
 
-  const [status, setStatus] = useState("processing"); 
-  // processing | success | failed
+  const [status, setStatus] = useState("processing");
+
 
   useEffect(() => {
     if (!sessionId) {
@@ -39,29 +39,31 @@ export default function PaymentSuccess() {
     verify();
   }, [sessionId, navigate]);
 
- 
   if (status === "processing") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 text-center">
-        <div className="w-full max-w-sm">
-          <p className="text-base sm:text-lg font-medium">
-            Processing your payment…
+      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6">
+        <div className="w-full max-w-xs sm:max-w-sm text-center">
+          <p className="text-base sm:text-lg font-medium text-gray-700">
+            Verifying your payment
+          </p>
+          <p className="mt-2 text-sm sm:text-base text-gray-500">
+            Please wait, this will only take a moment.
           </p>
         </div>
       </div>
     );
   }
 
- 
+
   if (status === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-sm bg-white p-6 sm:p-8 rounded-xl shadow text-center">
+      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6">
+        <div className="w-full max-w-xs sm:max-w-sm bg-white p-6 sm:p-8 rounded-xl shadow-md text-center">
           <h2 className="text-lg sm:text-xl font-semibold text-green-600">
-            Payment successful 🎉
+            Payment successful
           </h2>
           <p className="mt-3 text-sm sm:text-base text-gray-600">
-            Redirecting to your profile…
+            You will be redirected to your profile shortly.
           </p>
         </div>
       </div>
