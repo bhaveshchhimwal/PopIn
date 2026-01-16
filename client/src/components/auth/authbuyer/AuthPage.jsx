@@ -103,7 +103,6 @@ export default function AuthLayout({ defaultMode = "login" }) {
     checkAuth();
   }, [navigate]);
 
-  // ✅ CHANGED: spinner instead of "Loading..."
   if (checkingAuth) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">

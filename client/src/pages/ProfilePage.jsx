@@ -66,7 +66,6 @@ export default function ProfilePage() {
     fetchProfileData();
   }, [fetchProfileData]);
 
-  // ✅ CHANGED: spinner instead of "Loading..."
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">

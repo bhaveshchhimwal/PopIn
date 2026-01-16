@@ -64,69 +64,6 @@ export const getUserTickets = async (req, res) => {
   }
 };
 
-export const createTicket = async (req, res) => {
-  try {
-    if (!req.user?.id) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-
-    const userId = req.user.id;
-    const { eventId, quantity = 1 } = req.body;
-
-    if (!eventId) return res.status(400).json({ message: "eventId is required" });
-
-    const qty = parseInt(quantity, 10);
-    if (isNaN(qty) || qty < 1) {
-      return res.status(400).json({ message: "Invalid quantity" });
-    }
-
-    const result = await prisma.$transaction(async (tx) => {
-      const event = await tx.event.findUnique({
-        where: { id: eventId },
-      });
-
-      if (!event) throw new Error("Event not found");
-
-      if (event.ticketsSold + qty > event.capacity) {
-        throw new Error("Not enough tickets available");
-      }
-
-      await tx.event.update({
-        where: { id: eventId },
-        data: { ticketsSold: { increment: qty } },
-      });
-
-      const unitPrice = Number(event.price ?? 0);
-      const totalPrice = unitPrice * qty;
-
-      const ticket = await tx.ticket.create({
-        data: {
-          userId,
-          eventId,
-          eventName: event.title,
-          eventDate: event.date,
-          unitPrice,
-          quantity: qty,
-          totalPrice,
-          status: "PENDING",
-          ticketNumber: generateTicketNumber(),
-        },
-      });
-
-      return ticket;
-    });
-
-    const populatedTicket = await prisma.ticket.findUnique({
-      where: { id: result.id },
-      include: { event: true },
-    });
-
-    return res.status(201).json({ ticket: populatedTicket });
-  } catch (error) {
-    console.error("Create ticket error:", error);
-    return res.status(400).json({ message: error.message });
-  }
-};
 
 export const getTicketsForSeller = async (req, res) => {
   try {
