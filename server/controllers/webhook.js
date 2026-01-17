@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import dotenv from "dotenv";
 import prisma from "../prismaClient.js";
 import { generateTicketNumber } from "../utils/generateTicketNumber.js";
+import { sendTicketEmail } from "../utils/emailService.js";
 
 dotenv.config();
 
@@ -15,13 +16,9 @@ export const stripeWebhookHandler = async (req, res) => {
 
   let event;
   try {
-    const body = req.body.toString('utf8');
-    
-    event = stripe.webhooks.constructEvent(
-      body,
-      sig,
-      webhookSecret
-    );
+    const body = req.body.toString("utf8");
+
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -30,7 +27,7 @@ export const stripeWebhookHandler = async (req, res) => {
   console.log("Webhook event type:", event.type);
 
   if (event.type !== "checkout.session.completed") {
-    return res.status(200).json({ received: true }); 
+    return res.status(200).json({ received: true });
   }
 
   const session = event.data.object;
@@ -38,7 +35,7 @@ export const stripeWebhookHandler = async (req, res) => {
   const qty = parseInt(quantity, 10);
 
   try {
-    await prisma.$transaction(async (tx) => {
+    const createdTickets = await prisma.$transaction(async (tx) => {
       const ev = await tx.event.findUnique({
         where: { id: eventId },
       });
@@ -54,25 +51,47 @@ export const stripeWebhookHandler = async (req, res) => {
         },
       });
 
-      await tx.ticket.create({
-        data: {
-          userId,
-          eventId,
-          eventName: ev.title,
-          eventDate: ev.date,
-          unitPrice: ev.price,
-          quantity: qty,
-          totalPrice: ev.price * qty,
-          stripeSessionId: session.id,
-          ticketNumber: generateTicketNumber(),
-          status: "CONFIRMED",
-          purchaseDate: new Date(),
-        },
-      });
+      const ticketPromises = [];
+      for (let i = 0; i < qty; i++) {
+        ticketPromises.push(
+          tx.ticket.create({
+            data: {
+              userId,
+              eventId,
+              eventName: ev.title,
+              eventDate: ev.date,
+              unitPrice: ev.price,
+              quantity: 1,
+              totalPrice: ev.price,
+              stripeSessionId: session.id,
+              ticketNumber: generateTicketNumber(),
+              status: "CONFIRMED",
+              purchaseDate: new Date(),
+            },
+          })
+        );
+      }
+
+      const tickets = await Promise.all(ticketPromises);
+      return { tickets, event: ev };
     });
 
-    return res.status(200).json({ received: true });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true },
+    });
 
+    if (user && user.email) {
+      
+      await sendTicketEmail(
+        user.email,
+        user.name,
+        createdTickets.tickets,
+        createdTickets.event
+      );
+    }
+
+    return res.status(200).json({ received: true });
   } catch (err) {
     console.error("Webhook failed:", err.message);
 
@@ -89,3 +108,4 @@ export const stripeWebhookHandler = async (req, res) => {
     return res.status(200).json({ received: true });
   }
 };
+
