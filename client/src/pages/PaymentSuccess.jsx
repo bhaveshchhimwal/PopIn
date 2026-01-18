@@ -25,7 +25,7 @@ export default function PaymentSuccess() {
 
         if (res.data.success) {
           setStatus("success");
-          setTimeout(() => navigate("/profile"), 2000);
+          setTimeout(() => navigate("/profile"), 4500);
         } else {
           setStatus("failed");
           setTimeout(() => navigate("/payment/failed"), 2000);
@@ -69,12 +69,38 @@ export default function PaymentSuccess() {
           </div>
 
           <h2 className="mt-4 text-base sm:text-lg font-semibold text-gray-900">
-            Payment confirmed
+            Payment Confirmed!
           </h2>
 
           <p className="mt-2 text-sm sm:text-base text-gray-600">
             Your payment has been successfully processed.
           </p>
+
+          <div className="mt-5 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-start gap-2">
+              <svg
+                className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              <div className="text-left">
+                <p className="text-xs sm:text-sm font-medium text-blue-900">
+                  Check your email for tickets
+                </p>
+                <p className="mt-1 text-xs text-blue-700">
+                  Your tickets with QR codes have been sent to your email. Don't forget to check your spam folder if you don't see it.
+                </p>
+              </div>
+            </div>
+          </div>
 
           <p className="mt-4 text-xs sm:text-sm text-gray-500">
             Redirecting you to your profile…

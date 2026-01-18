@@ -1,22 +1,15 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import QRCode from "qrcode";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
-
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const generateQRCode = async (ticketNumber) => {
   try {
-    const qrCodeBuffer = await QRCode.toBuffer(ticketNumber);
-    return qrCodeBuffer;
+    const qrCodeDataURL = await QRCode.toDataURL(ticketNumber);
+    return qrCodeDataURL;
   } catch (err) {
     console.error("QR Code generation failed:", err);
     throw err;
@@ -26,37 +19,27 @@ const generateQRCode = async (ticketNumber) => {
 export const sendTicketEmail = async (userEmail, userName, tickets, eventDetails) => {
   try {
     
-    const attachments = [];
+    const ticketsHTML = [];
     
     for (let i = 0; i < tickets.length; i++) {
-      const qrCodeBuffer = await generateQRCode(tickets[i].ticketNumber);
-      attachments.push({
-        filename: `qr-code-${i}.png`,
-        content: qrCodeBuffer,
-        cid: `qrcode${i}` 
-      });
-    }
-
-  
-    const ticketsHTML = tickets
-      .map(
-        (ticket, index) => `
+      const qrCodeDataURL = await generateQRCode(tickets[i].ticketNumber);
+      
+      ticketsHTML.push(`
         <div style="border: 2px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 10px; background-color: #f9f9f9;">
-          <h3 style="color: #333;">Ticket ${index + 1} of ${tickets.length}</h3>
-          <p><strong>Ticket Number:</strong> ${ticket.ticketNumber}</p>
-          <p><strong>Status:</strong> ${ticket.status}</p>
+          <h3 style="color: #333;">Ticket ${i + 1} of ${tickets.length}</h3>
+          <p><strong>Ticket Number:</strong> ${tickets[i].ticketNumber}</p>
+          <p><strong>Status:</strong> ${tickets[i].status}</p>
           <div style="text-align: center; margin: 20px 0;">
-            <img src="cid:qrcode${index}" alt="QR Code" style="width: 200px; height: 200px;"/>
+            <img src="${qrCodeDataURL}" alt="QR Code" style="width: 200px; height: 200px;"/>
             <p style="font-size: 12px; color: #666;">Scan this QR code at the event entrance</p>
           </div>
         </div>
-      `
-      )
-      .join("");
+      `);
+    }
 
-    const mailOptions = {
-      from: process.env.GMAIL_USER,
+    const msg = {
       to: userEmail,
+      from: process.env.SENDGRID_FROM_EMAIL,
       subject: `Your Tickets for ${eventDetails.title}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -69,23 +52,19 @@ export const sendTicketEmail = async (userEmail, userName, tickets, eventDetails
             <p><strong>Number of Tickets:</strong> ${tickets.length}</p>
             <p><strong>Total Amount:</strong> ₹${eventDetails.price * tickets.length}</p>
           </div>
-
           <h2 style="color: #333;">Your Tickets</h2>
-          ${ticketsHTML}
-
+          ${ticketsHTML.join("")}
           <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p style="margin: 0; color: #856404;"><strong>⚠️ Important:</strong> Please bring these tickets (printed or on your phone) to the event. Each QR code will be scanned at the entrance.</p>
           </div>
-
           <p style="text-align: center; color: #666; font-size: 14px;">
             Thank you for your purchase! We look forward to seeing you at the event.
           </p>
         </div>
-      `,
-      attachments: attachments
+      `
     };
 
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log("Ticket email sent successfully to:", userEmail);
   } catch (err) {
     console.error("Failed to send ticket email:", err);
