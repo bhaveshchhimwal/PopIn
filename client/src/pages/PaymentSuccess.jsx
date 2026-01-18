@@ -25,7 +25,7 @@ export default function PaymentSuccess() {
 
         if (res.data.success) {
           setStatus("success");
-          setTimeout(() => navigate("/profile"), 4500);
+          setTimeout(() => navigate("/profile"), 4000);
         } else {
           setStatus("failed");
           setTimeout(() => navigate("/payment/failed"), 2000);
