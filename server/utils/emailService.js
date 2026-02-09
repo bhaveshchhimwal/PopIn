@@ -16,9 +16,21 @@ const generateQRCode = async (ticketNumber) => {
   }
 };
 
+
+const formatIndianDate = (date) => {
+  return new Date(date).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
 export const sendTicketEmail = async (userEmail, userName, tickets, eventDetails) => {
   try {
-    
     const attachments = [];
     
     for (let i = 0; i < tickets.length; i++) {
@@ -54,14 +66,16 @@ export const sendTicketEmail = async (userEmail, userName, tickets, eventDetails
           <div style="background-color: #f0f0f0; padding: 20px; border-radius: 10px; margin: 20px 0;">
             <h2 style="color: #333;">Event Details</h2>
             <p><strong>Event:</strong> ${eventDetails.title}</p>
-            <p><strong>Date:</strong> ${new Date(eventDetails.date).toLocaleDateString()}</p>
+            <p><strong>Date:</strong> ${formatIndianDate(eventDetails.date)}</p>
             <p><strong>Number of Tickets:</strong> ${tickets.length}</p>
             <p><strong>Total Amount:</strong> ₹${eventDetails.price * tickets.length}</p>
           </div>
           <h2 style="color: #333;">Your Tickets</h2>
           ${ticketsHTML}
           <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <p style="margin: 0; color: #856404;"><strong>⚠️ Important:</strong> Please bring these tickets (printed or on your phone) to the event. Each QR code is attached to this email and will be scanned at the entrance.</p>
+            <p style="margin: 0; color: #856404;">
+              <strong>⚠️ Important:</strong> Please bring these tickets (printed or on your phone) to the event. Each QR code is attached to this email and will be scanned at the entrance.
+            </p>
           </div>
           <p style="text-align: center; color: #666; font-size: 14px;">
             Thank you for your purchase! We look forward to seeing you at the event.
