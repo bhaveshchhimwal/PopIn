@@ -9,6 +9,19 @@ function ShortId({ value }) {
   return <span className="font-mono">{s.slice(0, 8)}</span>;
 }
 
+const formatIST = (date) => {
+  return new Date(date).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+};
+
 export default function ProfileView({
   user,
   isSeller,
@@ -110,7 +123,7 @@ export default function ProfileView({
                                 {ev.title}
                               </h4>
                               <p className="text-xs sm:text-sm text-slate-600">
-                                {new Date(ev.date).toLocaleString()}
+                                {formatIST(ev.date)}
                               </p>
                             </div>
 
@@ -171,7 +184,7 @@ export default function ProfileView({
                                   </div>
 
                                   <div className="text-xs text-slate-500">
-                                    {new Date(t.createdAt).toLocaleString()}
+                                    {formatIST(t.createdAt)}
                                   </div>
                                 </div>
                               );
@@ -229,7 +242,7 @@ export default function ProfileView({
                         </div>
 
                         <p className="text-xs sm:text-sm text-slate-600">
-                          {new Date(ticket.createdAt).toLocaleString()}
+                          {formatIST(ticket.createdAt)}
                         </p>
 
                         <div className="mt-2 text-sm text-slate-700">
@@ -296,7 +309,7 @@ export default function ProfileView({
                     </div>
 
                     <div className="text-xs text-slate-500">
-                      {new Date(t.createdAt).toLocaleString()}
+                      {formatIST(t.createdAt)}
                     </div>
                   </div>
                 );
