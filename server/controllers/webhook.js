@@ -48,6 +48,7 @@ export const stripeWebhookHandler = async (req, res) => {
         where: { id: eventId },
         data: {
           capacity: { decrement: qty },
+          ticketsSold: { increment: qty },
         },
       });
 
