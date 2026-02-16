@@ -12,8 +12,6 @@ import sellerRoutes from "./routes/seller.js";
 import eventRoutes from "./routes/event.js";
 import paymentsRoutes from "./routes/payments.js";
 import { stripeWebhookHandler } from "./controllers/webhook.js";
-import adminRoutes from "./routes/adminRoutes.js";
-
 
 
 dotenv.config();
@@ -49,7 +47,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/tickets", ticketRoutes);
-app.use("/api/admin", adminRoutes);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontendPath = path.join(__dirname, "../client/dist");
