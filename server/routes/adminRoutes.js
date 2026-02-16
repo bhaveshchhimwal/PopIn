@@ -1,7 +1,8 @@
+import express from "express";
 import prisma from "../prismaClient.js";
 
-// Temporary route - remove after running once
-router.post("/admin/fix-tickets-sold", async (req, res) => {
+const router = express.Router();
+router.post("/fix-tickets-sold", async (req, res) => {
   try {
     const events = await prisma.event.findMany();
     const results = [];
@@ -29,3 +30,5 @@ router.post("/admin/fix-tickets-sold", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+export default router; 
