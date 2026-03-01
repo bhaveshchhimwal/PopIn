@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "../../utils/axiosInstance.js";
-import { useToast } from "../../context/ToastContext.jsx";
+import axios from "../utils/axiosInstance.js";
+import { useToast } from "../context/ToastContext.jsx";
 
 export default function useEventDetail(id) {
   const { showToast } = useToast();

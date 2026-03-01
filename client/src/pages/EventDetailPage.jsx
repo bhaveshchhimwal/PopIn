@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/events/Navbar.jsx";
-import useEventDetail from "../components/events/EventDetail.jsx";
+import useEventDetail from "../hooks/useEventDetail.js";
 import { useToast } from "../context/ToastContext.jsx";
 
 export default function EventDetailPage() {
