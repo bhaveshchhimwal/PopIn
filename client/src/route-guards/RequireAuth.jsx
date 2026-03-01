@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import axios from "../../utils/axiosInstance";
+import axios from "../utils/axiosInstance.js";
 
 export default function RequireAuth({ userType = "buyer" }) {
   const [loading, setLoading] = useState(true);

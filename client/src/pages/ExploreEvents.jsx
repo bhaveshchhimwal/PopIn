@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "./Navbar.jsx";
-import HeroSearch from "./HeroSearch.jsx";
-import Filters from "./Filters.jsx";
-import EventCard from "./EventCard.jsx";
-import axios from "../../utils/axiosInstance.js";
+import Navbar from "../components/events/Navbar.jsx"; 
+import HeroSearch from "../components/events/HeroSearch.jsx";
+import Filters from "../components/events/Filters.jsx";
+import EventCard from "../components/events/EventCard.jsx";
+import axios from "../utils/axiosInstance.js";
 
 export default function ExploreEvents() {
   const [events, setEvents] = useState([]);

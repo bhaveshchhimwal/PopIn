@@ -11,12 +11,12 @@ export default function ProfilePage() {
   const [createdEvents, setCreatedEvents] = useState([]);
   const [ticketsOwned, setTicketsOwned] = useState([]);
   const [ticketsForSellerEvents, setTicketsForSellerEvents] = useState([]);
-  const [sellerEvents, setSellerEvents] = useState([]);
   const [error, setError] = useState("");
 
   const fetchProfileData = useCallback(async () => {
     setLoading(true);
     setError("");
+
     try {
       const res = await axios
         .get("/user/me", { withCredentials: true })
@@ -36,7 +36,7 @@ export default function ProfilePage() {
         const ev = await axios
           .get("/events/seller/myevents", { withCredentials: true })
           .catch(() => null);
-        if (ev) setCreatedEvents(ev.data.events ?? []);
+        setCreatedEvents(ev?.data?.events ?? []);
       } else {
         setCreatedEvents([]);
       }
@@ -48,11 +48,9 @@ export default function ProfilePage() {
       if (tRes) {
         setTicketsOwned(tRes.data.ticketsOwned ?? []);
         setTicketsForSellerEvents(tRes.data.ticketsForSellerEvents ?? []);
-        setSellerEvents(tRes.data.sellerEvents ?? []);
       } else {
         setTicketsOwned([]);
         setTicketsForSellerEvents([]);
-        setSellerEvents([]);
       }
     } catch (err) {
       console.error("Profile fetch error", err);
@@ -80,38 +78,20 @@ export default function ProfilePage() {
 
   const ticketsMap = {};
   ticketsForSellerEvents.forEach((t) => {
-    const ev = t.eventId;
-    const id = ev?.id ?? t.eventId;
+    const id = t.eventId?.id ?? t.eventId;
     if (!ticketsMap[id]) ticketsMap[id] = [];
     ticketsMap[id].push(t);
   });
 
-  const handleDeleteEvent = async (eventId) => {
-    const ok = window.confirm(
-      "Are you sure you want to delete this event? This cannot be undone."
-    );
-    if (!ok) return;
-
-    try {
-      await axios.delete(`/events/${eventId}`, { withCredentials: true });
-      await fetchProfileData();
-    } catch (err) {
-      console.error("Failed to delete event", err);
-      alert(err.response?.data?.message || "Failed to delete event");
-    }
-  };
-
   return (
     <ProfileView
       user={user}
-      navigate={navigate}
       isSeller={isSeller}
       createdEvents={createdEvents}
       ticketsOwned={ticketsOwned}
       ticketsForSellerEvents={ticketsForSellerEvents}
       ticketsMap={ticketsMap}
       error={error}
-      onDeleteEvent={handleDeleteEvent}
     />
   );
 }
